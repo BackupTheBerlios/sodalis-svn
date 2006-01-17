@@ -1,0 +1,17 @@
+baseenv=Environment(CPPPATH=".")
+env=baseenv.Copy(
+	CCFLAGS="-Wall"
+	)
+
+env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
+#env.Append(CCFLAGS=" -O3")
+
+sources = Split("""
+	errors/errors.c
+	cfgreader/cfg.c
+	cfgreader/tree_cfg.c
+	""")
+
+Default(env.Library("ku2", sources))
+
+baseenv.Program("ku2test", "test/ku.c", CCFLAGS=env['CCFLAGS'], LIBS="ku2", LIBPATH=".")

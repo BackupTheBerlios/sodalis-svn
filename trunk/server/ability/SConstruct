@@ -1,0 +1,15 @@
+baseenv=Environment(CPPPATH=[".","..","../kaneutil2"])
+env=baseenv.Copy(
+	CCFLAGS="-Wall"
+	)
+
+env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
+#env.Append(CCFLAGS=" -O3")
+
+sources = Split("""
+	messages/messages.c
+	friends/friends.c
+	admin/admin.c
+	""")
+
+Default(env.Library("ability", sources))

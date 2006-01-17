@@ -1,0 +1,37 @@
+baseenv=Environment(CPPPATH=[".","kaneutil2"])
+env=baseenv.Copy(
+	CCFLAGS="-Wall"
+	)
+
+env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -g")
+env.Append(CCFLAGS=" -DDEBUG_LOG -DLOG_NET -DLOG_DB")
+env.Append(CCFLAGS=" -DDEBUG_FUNC")
+#env.Append(CCFLAGS=" -O3")
+
+sources = Split("""
+	main/sodalis.c
+	log/log.c
+	other/other.c
+	network/net.c
+	network/nstore.c
+	user/user.c
+	user/utree.c
+	database/db.c
+	parse/parse.c
+	""")
+
+libs = Split("""
+	ku2
+	mysqlclient
+	ability
+	""")
+
+libpaths = Split("""
+	kaneutil2
+	/usr/lib/mysql
+	ability
+	""")
+
+SConscript("kaneutil2/SConstruct")
+SConscript("ability/SConstruct")
+Default(env.Program("sodalisd",sources,LIBS=libs,LIBPATH=libpaths))
