@@ -35,6 +35,14 @@ int parse_msg( usr_record *usr )
 	{
 		if ( abil_msgu(usr) ) return 1;
 	}	else
+	if ( !strcmp(p_arg[0],"MSGG") )
+	{
+		if ( abil_msgg(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"MSGD") )
+	{
+		if ( abil_msgd(usr) ) return 1;
+	}	else
 	if ( !strcmp(p_arg[0],"LSM") )
 	{
 		if ( abil_lsm(usr) ) return 1;
@@ -67,6 +75,14 @@ int parse_msg( usr_record *usr )
 	if ( !strcmp(p_arg[0],"LSF") )
 	{
 		if ( abil_lsf(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"LSG") )
+	{
+		if ( abil_lsg(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"LSINV") )
+	{
+		if ( abil_lsinv(usr) ) return 1;
 	}	else
 	
 	if ( !strcmp(p_arg[0],"STOP") )

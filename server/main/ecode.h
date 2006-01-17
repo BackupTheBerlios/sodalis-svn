@@ -21,6 +21,7 @@ enum
 	E_FILE,
 	E_KU2,
 	E_SOCKET,
+	E_SOCKOPT,
 	E_FCNTL,
 	E_BIND,
 	E_LISTEN,

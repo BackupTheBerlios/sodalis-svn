@@ -1,4 +1,4 @@
-baseenv=Environment(CPPPATH=[".","..","../kaneutil2"])
+baseenv=Environment(CPPPATH=[".","..","../../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)

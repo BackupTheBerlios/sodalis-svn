@@ -69,6 +69,8 @@ char *errtext( ecode_t c )
 			return gettext("An error in Kaneutil2");
 		case E_SOCKET:
 			return gettext("Socket error");
+		case E_SOCKOPT:
+			return gettext("Socket option error");
 		case E_BIND:
 			return gettext("Socket bind error");
 		case E_LISTEN:

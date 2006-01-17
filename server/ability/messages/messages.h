@@ -14,6 +14,12 @@
 //	Протокол 5.2.1
 int abil_msgu( usr_record *usr );
 
+//	Протокол 5.2.2
+int abil_msgg( usr_record *usr );
+
+//	Протокол 5.2.3
+int abil_msgd( usr_record *usr );
+
 //	Протокол 4.1
 int abil_lsm( usr_record *usr );
 

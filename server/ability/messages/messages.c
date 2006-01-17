@@ -7,7 +7,7 @@
  ****************************************************************************/
 
 #include "messages.h"
-#include "../common.h"
+#include "common.h"
 #include "main/options.h"
 
 int abil_msgu( usr_record *usr )
@@ -47,7 +47,7 @@ int abil_msgu( usr_record *usr )
 				tid=0;
 			}	else
 			{
-				plog(gettext("Invalid requested message type (uid=%d)\n"),usr->id);
+				plog(gettext("Invalid requested message type (uid=%d on %s)\n"),usr->id,"MSGU");
 				SENDU(usr,"FAILED MSGU");
 				return 0;
 			}
@@ -65,34 +65,11 @@ int abil_msgu( usr_record *usr )
 			break;
 			
 		case 3:	// отправление сообщения с типом по умолчанию
-			abil_num(uid,1,p,"MSGU");
-			if ( o_defmsgtype )
-			if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
-				uid,usr->id,time(NULL),p_arg[2]))!=E_NONE )
-			{
-				REQ_FAIL("MSGU");
-				SENDU(usr,"FAILED MSGU");
-				return 0;
-			}
-			if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
-				uid,usr->id,time(NULL),p_arg[2]))!=E_NONE )
-			{
-				REQ_FAIL("MSGU");
-				SENDU(usr,"FAILED MSGU");
-				return 0;
-			}
-			
-			//	если пользователь онлайн, то отправить оповещение
-			dst=usr_online(uid);
-			if ( dst!=NULL )
-			{
-				usr_write(dst,vstr("MSGU %d %d",db_id(),usr->id));
-			}
+			if ( o_defmsgtype ) tid=1; else tid=0;
 			
 			break;
 			
 		case 4: // отправление сообщения
-			abil_num(uid,1,p,"MSGU");
 			if ( !strcmp(p_arg[2],"i") )
 			{
 				tid=0;
@@ -107,36 +84,200 @@ int abil_msgu( usr_record *usr )
 				return 1;
 			}
 			
-			//	обновление базы двнных
-			if ( tid )
-			if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
-				uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
-			{
-				REQ_FAIL("MSGU");
-				SENDU(usr,"FAILED MSGU");
-				return 0;
-			}
-			if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
-				uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
-			{
-				REQ_FAIL("MSGU");
-				SENDU(usr,"FAILED MSGU");
-				return 0;
-			}
-			
-			//	если пользователь онлайн, то отправить оповещение
-			dst=usr_online(uid);
-			if ( dst!=NULL )
-			{
-				usr_write(dst,vstr("MSGU %d %d",db_id(),usr->id));
-			}
-			
 			break;
 			
 		default:	// неверное кол-во параметров
 			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"MSGU");
 			usr_write(usr,"DISCON CMD");
 			return 1;
+	}
+	
+	if ( p_argc>=3 )
+	{
+		abil_num(uid,1,p,"MSGU");
+		//	обновление базы двнных
+		if ( tid )
+		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
+			uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
+		{
+			REQ_FAIL("MSGU");
+			SENDU(usr,"FAILED MSGU");
+			return 0;
+		}
+		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
+			uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
+		{
+			REQ_FAIL("MSGU");
+			SENDU(usr,"FAILED MSGU");
+			return 0;
+		}
+		
+		//	если пользователь онлайн, то отправить оповещение
+		dst=usr_online(uid);
+		if ( dst!=NULL )
+		{
+			usr_write(dst,vstr("MSGU %d %d",db_id(),usr->id));
+		}
+	}
+	
+	pstop();
+	return 0;
+}
+
+int abil_msgg( usr_record *usr )
+{
+	int tip, gid, uid, i;
+	char *p, **dbres;
+	usr_record *dst;
+	pstart();
+	
+	switch ( p_argc )
+	{
+		case 3:	// тип по умолчанию
+			if ( o_defmsgtype ) tip=1; else tip=0;
+			
+			break;
+			
+		case 4: // сообщение с указанным типом
+			if ( !strcmp(p_arg[2],"i") )
+			{
+				tip=0;
+			}	else
+			if ( !strcmp(p_arg[2],"s") )
+			{
+				tip=1;
+			}	else
+			{
+				plog("Invalid message type (uid=%d on %s)\n",usr->id,"MSGG");
+				usr_write(usr,"DISCON CMD");
+				return 1;
+			}
+			
+			break;
+			
+		default:	// неверное кол-во параметров
+			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"MSGG");
+			usr_write(usr,"DISCON CMD");
+			return 1;
+	}
+	
+	//	принадлежит лт группа пользователю?
+	abil_num(gid,1,p,"MSGG");
+	if ( db_query(vstr("SELECT owner FROM groups WHERE id='%d'",gid))!=1 )
+	{
+		REQ_FAIL("MSGG");
+		SENDU(usr,"FAILED MSGG");
+		return 0;
+	}
+	if ( (dbres=db_row())==NULL )
+	{
+		REQ_FAIL("MSGG");
+		SENDU(usr,"FAILED MSGG");
+		return 0;
+	}
+	abil_str2num(uid,dbres[0],p,"MSGG");
+	if ( uid!=usr->id )
+	{
+		plog(gettext("Group %d does not belong to user (uid=%d on %s)\n"),gid,uid,"MSGG");
+		SENDU(usr,"FAILED MSGG");
+		return 0;
+	}
+	
+	//	поиск друзей из этой группы
+	if ( (uid=db_query(vstr("SELECT who FROM friends WHERE whose='%d' AND undergroup='%d'",usr->id,gid)))<0 )
+	{
+		REQ_FAIL("MSGG");
+		SENDU(usr,"FAILED MSGG");
+		return 0;
+	}
+	
+	//	отправка им сообщений
+	for ( i=0; i<uid; i++ )
+	{
+		if ( (dbres=db_row())==NULL )
+		{
+			REQ_FAIL("MSGG");
+			SENDU(usr,"FAILED MSGG");
+			return 0;
+		}
+		//	обновление базы двнных
+		if ( tip )
+		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %s, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
+			dbres[0],usr->id,time(NULL),p_arg[3]))!=E_NONE )
+		{
+			REQ_FAIL("MSGG");
+			SENDU(usr,"FAILED MSGG");
+			return 0;
+		}
+		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %s, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
+			dbres[0],usr->id,time(NULL),p_arg[3]))!=E_NONE )
+		{
+			REQ_FAIL("MSGG");
+			SENDU(usr,"FAILED MSGG");
+			return 0;
+		}
+		
+		//	если пользователь онлайн, то отправить оповещение
+		dst=usr_online(uid);
+		if ( dst!=NULL )
+		{
+			usr_write(dst,vstr("MSGG %d %d",db_id(),usr->id));
+		}
+	}
+	
+	pstop();
+	return 0;
+}
+
+int abil_msgd( usr_record *usr )
+{
+	int mid, uid;
+	char *p, **dbres;
+	pstart();
+	
+	CHECK_ARGC(2,"MSGD");
+	abil_num(mid,1,p,"MSGD");
+	
+	if ( db_query(vstr("SELECT whose, who_sent, type FROM messages WHERE id='%d'",mid))!=1 )
+	{
+		REQ_FAIL("MSGD");
+		SENDU(usr,"FAILED MSGD");
+		return 0;
+	}
+	if ( (dbres=db_row())==NULL )
+	{
+		REQ_FAIL("MSGD");
+		SENDU(usr,"FAILED MSGD");
+		return 0;
+	}
+	
+	//	прверка типа и пользователя
+	if ( !strcmp(dbres[2],"i") )
+	{
+		abil_str2num(uid,dbres[0],p,"MSGD");
+	}	else
+	if ( !strcmp(dbres[2],"s") )
+	{
+		abil_str2num(uid,dbres[1],p,"MSGD");
+	}	else
+	{
+		plog(gettext("Invalid requested message type (uid=%d on %s)\n"),usr->id,"MSGD");
+		SENDU(usr,"FAILED MSGD");
+		return 0;
+	}
+	if ( uid!=usr->id )
+	{
+		plog(gettext("User cannot delete message which does not belong to him (uid=%d on %s)\n"),usr->id,"MSGD");
+		SENDU(usr,"FAILED MSGD");
+		return 0;
+	}
+	
+	//	удаление
+	if ( db_nr_query(vstr("DELETE FROM messages WHERE id='%d'",mid))!=E_NONE )
+	{
+		REQ_FAIL("MSGD");
+		SENDU(usr,"FAILED MSGD");
+		return 0;
 	}
 	
 	pstop();

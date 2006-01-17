@@ -73,6 +73,7 @@ inline ecode_t free_storage( void )
 ecode_t net_open( uint16_t port, int backlog )
 {
 	struct sockaddr_in addr;
+	int reuseaddr=1;
 	
 	pstart();
 	
@@ -88,6 +89,13 @@ ecode_t net_open( uint16_t port, int backlog )
 		plog(gettext("Failed to create a socket: %s\n"),strerror(errno));
 		free_storage();
 		return E_SOCKET;
+	}
+	
+	if ( setsockopt(listen_sock,SOL_SOCKET,SO_REUSEADDR,&reuseaddr,sizeof(reuseaddr))==-1 )
+	{
+		plog(gettext("Failed to set a socket option: %s\n"),strerror(errno));
+		free_storage();
+		return E_SOCKOPT;
 	}
 	
 	if ( bind(listen_sock,(void*)&addr,sizeof(addr))!=0 )

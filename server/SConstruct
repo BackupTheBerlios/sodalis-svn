@@ -1,4 +1,4 @@
-baseenv=Environment(CPPPATH=[".","kaneutil2"])
+baseenv=Environment(CPPPATH=[".","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
@@ -27,11 +27,11 @@ libs = Split("""
 	""")
 
 libpaths = Split("""
-	kaneutil2
+	../kaneutil2
 	/usr/lib/mysql
 	ability
 	""")
 
-SConscript("kaneutil2/SConstruct")
+SConscript("../kaneutil2/SConstruct")
 SConscript("ability/SConstruct")
 Default(env.Program("sodalisd",sources,LIBS=libs,LIBPATH=libpaths))

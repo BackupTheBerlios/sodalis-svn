@@ -401,7 +401,8 @@ int abil_lsf( usr_record *usr )
 			lsf_OF
 		}	usgr;
 		int ugid;
-	}	lsf_p={lsf_NONE_o, lsf_NONE_ug, -1};
+		int new;
+	}	lsf_p={lsf_NONE_o, lsf_NONE_ug, -1, 0};
 	int i, tmp, friend_cnt;
 	char *query, *p;
 	char **dbres;
@@ -444,6 +445,12 @@ int abil_lsf( usr_record *usr )
 			lsf_p.ugid=tmp;
 			lsf_p.usgr=lsf_OF;
 		}	else
+		if ( !strcmp(p_arg[i],"NEW") && (lsf_p.online==lsf_NONE_o) && (lsf_p.usgr==lsf_NONE_ug) )
+		{
+			lsf_p.new=1;
+			lsf_p.online=lsf_ON;
+			lsf_p.usgr=lsf_OF;
+		}	else
 		{
 			plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSF");
 			usr_write(usr,"DISCON CMD");
@@ -451,63 +458,72 @@ int abil_lsf( usr_record *usr )
 		}
 	}
 	
-	//	обработка запроса
-	switch ( lsf_p.usgr )
+	if ( lsf_p.new==0 )
 	{
-		case lsf_NONE_ug:
-			query=vstr("SELECT who FROM friends WHERE whose='%d'",usr->id);
-			break;
-		case lsf_GRP:
-			query=vstr("SELECT who FROM friends WHERE whose='%d' AND undergroup='%d'",usr->id,lsf_p.ugid);
-			break;
-		case lsf_OF:
-			query=vstr("SELECT who FROM friends WHERE whose='%d'",lsf_p.ugid);
-	}
-	
-	//	поиск всех друзей
-	tmp=db_query(query);
-	if ( friend_cnt<0 )
-	{
-		REQ_FAIL("LSF");
-		return 0;
-	}
-	if ( tmp==0 ) return 0;
-	if ( (dbres=db_row())==NULL )
-	{
-		REQ_FAIL("LSF");
-		return 0;
-	}
-	query=dbres[0];
-	for ( i=1; i<tmp; i++ )
-	{
+		//	обработка запроса
+		switch ( lsf_p.usgr )
+		{
+			case lsf_NONE_ug:
+				query=vstr("SELECT who FROM friends WHERE whose='%d'",usr->id);
+				break;
+			case lsf_GRP:
+				query=vstr("SELECT who FROM friends WHERE whose='%d' AND undergroup='%d'",usr->id,lsf_p.ugid);
+				break;
+			case lsf_OF:
+				query=vstr("SELECT who FROM friends WHERE whose='%d'",lsf_p.ugid);
+		}
+		
+		//	поиск всех друзей
+		tmp=db_query(query);
+		if ( friend_cnt<0 )
+		{
+			REQ_FAIL("LSF");
+			return 0;
+		}
+		if ( tmp==0 ) return 0;
 		if ( (dbres=db_row())==NULL )
 		{
 			REQ_FAIL("LSF");
 			return 0;
 		}
-		query=vstr("%s, %s",query,dbres[0]);
-	}
-	
-	//	обработка запроса
-	switch ( lsf_p.online )
+		query=dbres[0];
+		for ( i=1; i<tmp; i++ )
+		{
+			if ( (dbres=db_row())==NULL )
+			{
+				REQ_FAIL("LSF");
+				return 0;
+			}
+			query=vstr("%s, %s",query,dbres[0]);
+		}
+		
+		//	обработка запроса
+		switch ( lsf_p.online )
+		{
+			case lsf_NONE_o:
+				query=vstr("SELECT log.id, log.name, log.online, " \
+						"log.main_photo, fr.undergroup FROM logins log, friends fr " \
+						"WHERE log.id IN (%s) AND fr.whose='%d' AND fr.who=log.id", \
+						query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
+				break;
+			case lsf_ON:
+				query=vstr("SELECT log.id, log.name, log.online, " \
+						"log.main_photo, fr.undergroup FROM logins log, friends fr " \
+						"WHERE log.id IN (%s) AND log.online=1 AND fr.whose='%d' AND fr.who=log.id", \
+						query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
+				break;
+			case lsf_OFF:
+				query=vstr("SELECT log.id, log.name, log.online, " \
+						"log.main_photo, fr.undergroup FROM logins log, friends fr " \
+						"WHERE log.id IN (%s) AND log.online=0 AND fr.whose='%d' AND fr.who=log.id", \
+						query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
+		}
+	}	else
 	{
-		case lsf_NONE_o:
-			query=vstr("SELECT log.id, log.name, log.online, " \
-					"log.main_photo, fr.undergroup FROM logins log, friends fr " \
-					"WHERE log.id IN (%s) AND fr.whose='%d' AND fr.who=log.id", \
-					query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
-			break;
-		case lsf_ON:
-			query=vstr("SELECT log.id, log.name, log.online, " \
-					"log.main_photo, fr.undergroup FROM logins log, friends fr " \
-					"WHERE log.id IN (%s) AND log.online=1 AND fr.whose='%d' AND fr.who=log.id", \
-					query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
-			break;
-		case lsf_OFF:
-			query=vstr("SELECT log.id, log.name, log.online, " \
-					"log.main_photo, fr.undergroup FROM logins log, friends fr " \
-					"WHERE log.id IN (%s) AND log.online=0 AND fr.whose='%d' AND fr.who=log.id", \
-					query,lsf_p.usgr==lsf_OF?lsf_p.ugid:usr->id);
+		//	список новых друзей
+		query=vstr("SELECT log.id, log.name, log.online, log.main_photo, fr.undergroup, fr.id " \
+				"FROM logins log, friends fr " \
+				"WHERE fr.whose='%d' AND fr.knew='-' AND log.id=fr.who",usr->id);
 	}
 	
 	//	поиск информации о друзьях
@@ -528,6 +544,14 @@ int abil_lsf( usr_record *usr )
 		}
 		SENDU(usr,vstr("USR %s %s %s %s %s",dbres[0],dbres[1]?dbres[1]:"NULL",\
 				*(dbres[2])=='1'?"T":"F",dbres[4],dbres[3]));
+		if ( lsf_p.new==1 )
+		{
+			if ( db_nr_query(vstr("UPDATE friends SET knew='+' WHERE id='%s'",dbres[5]))!=E_NONE )
+			{
+				REQ_FAIL("LSF");
+				return 0;
+			}
+		}
 	}
 	
 	pstop();
@@ -536,14 +560,111 @@ int abil_lsf( usr_record *usr )
 
 int abil_lsg( usr_record *usr )
 {
+	int i, tmp;
+	char **dbres;
 	pstart();
+	
+	CHECK_ARGC(1,"LSG");
+	
+	if ( (tmp=db_query(vstr("SELECT id, caption, about FROM groups WHERE owner='%d'",usr->id)))<0 )
+	{
+		REQ_FAIL("LSG");
+		return 0;
+	}
+	
+	for ( i=0; i<tmp; i++ )
+	{
+		if ( (dbres=db_row())==NULL )
+		{
+			REQ_FAIL("LSG");
+			return 0;
+		}
+		SENDU(usr,vstr("GROUP %s \"%s\" \"%s\"",dbres[0],dbres[1],dbres[2]));
+	}
+	
+	
 	pstop();
 	return 0;
 }
 
 int abil_lsinv( usr_record *usr )
 {
+	char *query;
+	int makeshown=0;
+	int i, tmp;
+	char **dbres;
 	pstart();
+	
+	//	сбор параметров
+	switch ( p_argc )
+	{
+		case 1:	// без параметров
+			query=vstr("SELECT id, who_invited, date, invite_text " \
+					"FROM invites WHERE whose='%d'",usr->id);
+			
+			break;
+			
+		case 2: // с одним параметром
+			if ( !strcmp(p_arg[1],"NEW") )
+			{
+				query=vstr("SELECT id, who_invited, date, invite_text " \
+						"FROM invites WHERE whose='%d' AND shown='-'",usr->id);
+				makeshown=1;
+			}	else
+			if ( !strcmp(p_arg[1],"OLD") )
+			{
+				query=vstr("SELECT id, who_invited, date, invite_text " \
+						"FROM invites WHERE whose='%d' AND shown='+'",usr->id);
+			}	else
+			if ( !strcmp(p_arg[1],"SENT") )
+			{
+				query=vstr("SELECT id, whose, date, invite_text FROM invites " \
+						"WHERE who_invited='%d'",usr->id);
+			}	else
+			{
+				plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSF");
+				usr_write(usr,"DISCON CMD");
+				return 1;
+			}
+			
+			break;
+			
+		default:
+			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"LSINV");
+			usr_write(usr,"DISCON CMD");
+			return 1;
+	}
+	
+	//	выполнение запроса
+	if ( (tmp=db_query(query))<0 )
+	{
+		REQ_FAIL("LSINV");
+		return 0;
+	}
+	for ( i=0; i<tmp; i++ )
+	{
+		if ( (dbres=db_row())==NULL )
+		{
+			REQ_FAIL("LSINV");
+			return 0;
+		}
+		if ( !strcmp(dbres[3],"NULL") )
+		{
+			SENDU(usr,vstr("INVITE %s %s %s",dbres[0],dbres[1],dbres[2]));
+		}	else
+		{
+			SENDU(usr,vstr("INVITE %s %s %s %s",dbres[0],dbres[1],dbres[2],dbres[3]));
+		}
+		if ( makeshown )
+		{
+			if ( db_nr_query(vstr("UPDATE invites SET shown='+' WHERE id='%s'",dbres[0]))!=E_NONE )
+			{
+				REQ_FAIL("LSINV");
+				return 0;
+			}
+		}
+	}
+	
 	pstop();
 	return 0;
 }
