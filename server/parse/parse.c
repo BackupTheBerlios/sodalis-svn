@@ -31,6 +31,7 @@ int parse_msg( usr_record *usr )
 		return 1;
 	}	else
 	
+	//	сообщения
 	if ( !strcmp(p_arg[0],"MSGU") )
 	{
 		if ( abil_msgu(usr) ) return 1;
@@ -48,6 +49,7 @@ int parse_msg( usr_record *usr )
 		if ( abil_lsm(usr) ) return 1;
 	}	else
 	
+	//	друзья и группы
 	if ( !strcmp(p_arg[0],"INVITE") )
 	{
 		if ( abil_invite(usr) ) return 1;
@@ -85,6 +87,25 @@ int parse_msg( usr_record *usr )
 		if ( abil_lsinv(usr) ) return 1;
 	}	else
 	
+	//	фотографии и фотоальбомы
+	if ( !strcmp(p_arg[0],"PHOTO") )
+	{
+		if ( abil_photo(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"CHALB") )
+	{
+		if ( abil_chalb(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"CHMPH") )
+	{
+		if ( abil_chmph(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"ALBUM") )
+	{
+		if ( abil_album(usr) ) return 1;
+	}	else
+	
+	//	админисрирование
 	if ( !strcmp(p_arg[0],"STOP") )
 	{
 		if ( abil_stop(usr) ) return 1;

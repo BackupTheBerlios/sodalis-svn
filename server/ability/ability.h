@@ -12,5 +12,6 @@
 #include "admin/admin.h"
 #include "messages/messages.h"
 #include "friends/friends.h"
+#include "photos/photos.h"
 
 #endif
