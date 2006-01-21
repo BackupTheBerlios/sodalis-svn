@@ -13,6 +13,7 @@
 
 //	Протокол 5.4.1 (+a)
 int abil_photo( usr_record *usr );
+int abil_photo_data( usr_record *usr, int status );
 
 //	Протокол 5.4.2
 int abil_chalb( usr_record *usr );

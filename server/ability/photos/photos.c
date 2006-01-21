@@ -8,8 +8,19 @@
 
 #include "photos.h"
 #include "common.h"
+#include "main/options.h"
 
 int abil_photo( usr_record *usr )
+{
+	pstart();
+	
+	
+	
+	pstop();
+	return 0;
+}
+
+int abil_photo_data( usr_record *usr, int status )
 {
 	pstart();
 	pstop();

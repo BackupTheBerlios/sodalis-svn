@@ -27,6 +27,9 @@
 
 #define CFG_DEFMSGTYPE 1
 
+#define CFG_PHOTODIR "/var/sodalis/ph"
+#define CFG_PHOTOSIZE 512
+
 extern int server_is_on;
 
 #endif

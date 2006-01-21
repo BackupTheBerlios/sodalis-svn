@@ -51,6 +51,8 @@ char o_sqlpswd[CFG_BUFFER]=CFG_SQLPSWD;
 int o_stoplev=CFG_STOPLEV;
 int o_breaklev=CFG_BREAKLEV;
 int o_defmsgtype=CFG_DEFMSGTYPE;
+char o_photo_dir[CFG_BUFFER]=CFG_PHOTODIR;
+int o_photo_size=CFG_PHOTOSIZE;
 
 //	функции
 char *errtext( ecode_t c )
@@ -231,7 +233,9 @@ int main( int argc, char *argv[] )
 			(cfg_query("mysql_pswd","s",o_sqlpswd)!=KE_NONE) || \
 			(cfg_query("save_msg","b",&o_defmsgtype)!=KE_NONE) || \
 			(cfg_query("lev_stop","i",&o_stoplev)!=KE_NONE) || \
-			(cfg_query("lev_break","i",&o_breaklev)!=KE_NONE))
+			(cfg_query("lev_break","i",&o_breaklev)!=KE_NONE) || \
+			(cfg_query("photo_dir","s",o_photo_dir)!=KE_NONE) || \
+			(cfg_query("photo_size","i",&o_photo_size)!=KE_NONE))
 		{
 			plog(gettext("Failed to add values to a the config query\n"));
 			cfg_close();

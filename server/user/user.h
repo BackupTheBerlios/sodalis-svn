@@ -14,6 +14,11 @@
 //	минимальный размер буффера, который должен быть свободен
 #define BUFFER_MINIMUM_FREE 128
 
+/*
+	флаги datamode
+*/
+#define UF_DATAPHOTOIN 1
+
 #include "network/net_id.h"
 
 //	запись пользователя
@@ -24,6 +29,11 @@ struct
 	int id;
 	int level;	// уровень доступа
 	int max_gr, max_ph;	// максимальное кол-во групп и фотоальбомов
+	
+	//	datamode
+	unsigned int dataflags;
+	void *data;
+	int data_sz, data_cur;
 	
 	//	сеть
 	int sock;

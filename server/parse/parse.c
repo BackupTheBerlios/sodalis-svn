@@ -18,7 +18,7 @@
 #include "ability/ability.h"
 
 char *p_arg[PARSER_ARG_CNT];
-int p_argc;
+int p_argc, p_size[PARSER_ARG_CNT];
 char p_buf[BUFFER_SIZE_USER];
 
 int parse_msg( usr_record *usr )
@@ -117,8 +117,49 @@ int parse_msg( usr_record *usr )
 	
 	{
 		pdebug("recv %s\n",p_arg[0]);
+		plog(gettext("Invalid command (uid=%d)\n"),usr->id);
 		usr_write(usr,"DISCON CMD");
 		return 1;
+	}
+	
+	pstop();
+	return 0;
+}
+
+int parse_data( usr_record *usr )
+{
+	int status;
+	pstart();
+	
+	if ( p_argc!=1 )
+	{
+		plog(gettext("Invalid data for datamode (uid=%d)\n"),usr->id);
+		usr_write(usr,"DISCON CMD");
+		return 1;
+	}
+	
+	if ( p_size[0]>usr->data_sz )
+	{
+		plog(gettext("Data size is too big for the buffer (uid=%d)\n"),usr->id);
+		usr->data_sz=0;
+		status=ABIL_ST_FAILURE;
+	}	else
+	{
+		memcpy(usr->data+usr->data_cur,p_arg[0],p_size[0]);
+		usr->data_cur+=p_size[0];
+		usr->data_sz-=p_size[0];
+		status=ABIL_ST_SUCCESS;
+	}
+	
+	if( usr->data_sz==0 )
+	{
+		if ( (usr->dataflags&UF_DATAPHOTOIN)==UF_DATAPHOTOIN )
+		{
+			return abil_photo_data(usr,status);
+		}	else
+		{
+			return 1;
+		}
 	}
 	
 	pstop();
@@ -147,7 +188,10 @@ int parse( char *msg )
 						plog(gettext("Cannot parse: too many parametres\n"));
 						return 0;
 					}	else
+					{
+						p_size[i-1]=dst-p_arg[i-1];
 						p_arg[i++]=dst;
+					}
 					src++;
 				}	else
 				{
@@ -193,6 +237,7 @@ int parse( char *msg )
 		return 0;
 	}
 	
+	p_size[i-1]=dst-p_arg[i-1];
 	p_argc=i;
 	pstop();
 	return i;

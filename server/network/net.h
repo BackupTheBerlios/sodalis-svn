@@ -22,6 +22,7 @@
 #include "list/list_end.h"
 
 extern kulist_t_net *sock_wlist;
+extern kulist_t_net *sock_list;
 
 /*
 	1.	Создать слушающий сокет

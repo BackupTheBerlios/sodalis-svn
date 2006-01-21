@@ -53,22 +53,38 @@ ecode_t usr_init( void )
 ecode_t usr_halt( void )
 {
 	ecode_t ec;
+	int i;
+	net_id *id;
 	pstart();
 	
 	plog(gettext("Module 'user` is beging stopped!\n"));
 	
+	//	отсоединение пользователей
+	for ( i=0; i<sock_list->size; i++ )
+	{
+		if ( (id=kulist_next_net(sock_list))==NULL )
+		{
+			plog(gettext("Failed to get next element of the list (kucode=%d)\n"),kucode);
+			ecode=E_KU2;
+		}
+		usr_rem((usr_record*)id->data);
+	}
+	
+	//	закрытие базы данных
 	if ( (ec=db_halt())!=E_NONE )
 	{
+		ecode=ec;
 		plog(gettext("Failed to halt the data source\n"));
 	}
 	
+	//	удаление дерева
 	if ( abtree_free_usr(utree)!=KE_NONE )
 	{
 		plog(gettext("Failed to free the tree (kucode=%d)\n"),kucode);
-		ec=E_KU2;
+		ecode=E_KU2;
 	}
 	
-	if ( ec!=E_NONE ) return ec;
+	if ( ecode!=E_NONE ) return ecode;
 	
 	pstop();
 	return E_NONE;
@@ -176,6 +192,11 @@ ecode_t usr_auth( usr_record *usr )
 		return E_AUTH;
 	}
 	
+	usr->data=NULL;
+	usr->data_sz=0;
+	usr->data_cur=0;
+	usr->dataflags=0;
+	
 	if ( (kucode=abtree_ins_usr(utree,usr))!=KE_NONE )
 	{
 		plog(gettext("Failed to insert data to the tree (kucode=%d)\n"),kucode);
@@ -214,6 +235,10 @@ ecode_t usr_manage( usr_record *usr )
 		if ( ecode==E_FILE )
 		{
 			plog(gettext("Cannot read from the socket, disconnecting (sock=%d)\n"),usr->sock);
+		}	else
+		if ( ecode==E_OBUFFER )
+		{
+			usr_write(usr,"DISCON SIZE");
 		}
 		return ecode;
 	}
@@ -233,7 +258,14 @@ ecode_t usr_manage( usr_record *usr )
 			//	обновление состояния
 			db_nr_query(vstr("UPDATE logins SET last_ip='%s', last_date=%d, online=1 "\
 					"WHERE id=%d",usr->netid->ip,time(NULL),usr->id));
-			//	здесь обработка сообщений
+			//	здесь обработка сообщений + флаги
+			if ( usr->dataflags )
+			{
+				if ( parse_data(usr) )
+				{
+					return E_DISCONNECT;
+				}
+			}	else
 			if ( parse_msg(usr) )
 			{
 				return E_DISCONNECT;
