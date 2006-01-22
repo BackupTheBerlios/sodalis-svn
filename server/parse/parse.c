@@ -138,20 +138,24 @@ int parse_data( usr_record *usr )
 		return 1;
 	}
 	
-	if ( p_size[0]>usr->data_sz )
+	pdebug("size: %d cur: %d arg:'%s' argsz:%d\n",usr->data_sz,usr->data_cur,p_arg[0],p_size[0]);
+	
+	if ( p_size[0]>usr->data_sz-usr->data_cur )
 	{
 		plog(gettext("Data size is too big for the buffer (uid=%d)\n"),usr->id);
-		usr->data_sz=0;
+		usr->data_cur=usr->data_sz;
 		status=ABIL_ST_FAILURE;
 	}	else
 	{
+		_
 		memcpy(usr->data+usr->data_cur,p_arg[0],p_size[0]);
 		usr->data_cur+=p_size[0];
-		usr->data_sz-=p_size[0];
 		status=ABIL_ST_SUCCESS;
 	}
 	
-	if( usr->data_sz==0 )
+	pdebug("cur: %d\n",usr->data_cur);
+	
+	if( usr->data_cur==usr->data_sz )
 	{
 		if ( (usr->dataflags&UF_DATAPHOTOIN)==UF_DATAPHOTOIN )
 		{
@@ -175,6 +179,7 @@ int parse( char *msg )
 	pstart();
 	
 	p_arg[0]=dst;
+	if ( *src==0 ) return 0;
 	while ( *src!=0 )
 	{
 		switch ( *src )
@@ -189,7 +194,7 @@ int parse( char *msg )
 						return 0;
 					}	else
 					{
-						p_size[i-1]=dst-p_arg[i-1];
+						p_size[i-1]=dst-p_arg[i-1]-1;
 						p_arg[i++]=dst;
 					}
 					src++;

@@ -24,4 +24,14 @@ char *qstr( char *s1, char *s2 );
 */
 char *vstr( char *fmt, ... );
 
+/*
+	преобразование строки в путь до директории /a/b/
+*/
+void qdir( char *path );
+
+/*
+	qdir + проверка существования директории
+*/
+int qdir2( char *path );
+
 #endif

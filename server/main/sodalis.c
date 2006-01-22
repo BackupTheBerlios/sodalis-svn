@@ -20,6 +20,7 @@
 #include "log/log.h"
 #include "network/net.h"
 #include "user/user.h"
+#include "other/other.h"
 
 #include "list/list_int.h"
 #include "list/list_end.h"
@@ -255,6 +256,14 @@ int main( int argc, char *argv[] )
 			return EXIT_FAILURE;
 		}
 	}
+	
+	//	обработка полученных данных
+	if ( qdir2(o_photo_dir) )
+	{
+		plog(gettext("Photo directory cannot be opened\n"));
+		return EXIT_FAILURE;
+	}
+	pdebug("%s\n",o_photo_dir);
 	
 	//	открытие файла лога
 	if ( (ecode=openlog(o_logfile))!=E_NONE )

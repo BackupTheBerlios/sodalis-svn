@@ -67,6 +67,10 @@ ecode_t usr_halt( void )
 			plog(gettext("Failed to get next element of the list (kucode=%d)\n"),kucode);
 			ecode=E_KU2;
 		}
+		if ( ((usr_record*)id->data)->dataflags!=0 )
+		{
+			dfree(((usr_record*)id->data)->data);
+		}
 		usr_rem((usr_record*)id->data);
 	}
 	

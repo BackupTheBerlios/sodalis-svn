@@ -16,6 +16,8 @@
 #endif
 
 #include "other/other.h"
+#include <dirent.h>
+#include <errno.h>
 
 char *qstr( char *s1, char *s2 )
 {
@@ -48,4 +50,31 @@ char *vstr( char *fmt, ... )
 	}
 	#endif
 	return _vstr_[i];
+}
+
+void qdir( char *path )
+{
+	char *c=path;
+	while ( *c ) c++;
+	if ( c[-1]!='/' )
+	{
+		c[0]='/';
+		c[1]=0;
+	}
+}
+
+int qdir2( char *path )
+{
+	DIR *dir;
+	dir=opendir(path);
+	if ( dir==NULL )
+	{
+		plog(gettext("Failed to open a directory: %s\n"),strerror(errno));
+		return 1;
+	}	else
+	{
+		if ( closedir(dir) ) return 1;
+		qdir(path);
+		return 0;
+	}
 }
