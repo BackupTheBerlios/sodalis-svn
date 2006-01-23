@@ -1,0 +1,26 @@
+baseenv=Environment(CPPPATH=[".","../kaneutil2"])
+env=baseenv.Copy(
+	CCFLAGS="-Wall"
+	)
+
+env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -g")
+env.Append(CCFLAGS=" -DDEBUG_FUNC")
+#env.Append(CCFLAGS=" -O3")
+
+sources = Split("""
+	scc.c
+	ability.c
+	network.c
+	parse.c
+	""")
+
+libs = Split("""
+	ku2
+	""")
+
+libpaths = Split("""
+	../kaneutil2
+	""")
+
+SConscript("../kaneutil2/SConstruct")
+Default(env.Program("scc",sources,LIBS=libs,LIBPATH=libpaths))
