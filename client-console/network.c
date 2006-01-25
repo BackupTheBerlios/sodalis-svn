@@ -21,7 +21,7 @@
 
 int sock;
 int out_cur=0, in_cur=0;
-int out_ptr=0, in_ptr=0;
+int out_pos=0, in_pos=0;
 char out_buf[BUFFER_SIZE], in_buf[BUFFER_SIZE];
 
 int net_connect( char *host, u_int16_t port )
@@ -90,7 +90,10 @@ int net_send( char *msg )
 {
 	pstart();
 	
-	
+	write(sock,msg,strlen(msg)+1);
+	#ifdef DEBUG_NET
+	printf("=== SEND: \"%s\"\n",msg);
+	#endif
 	
 	pstop();
 	return 0;
@@ -98,14 +101,45 @@ int net_send( char *msg )
 
 int net_recv( void )
 {
+	int t;
 	pstart();
+	
+	if ( BUFFER_SIZE-in_pos<MINIMUM_BUFSIZE )
+	{
+		if ( in_cur==0 )
+		{
+			printf(gettext("Incoming message buffer is overflowed\n"));
+			return -1;
+		}
+		memmove(in_buf,in_buf+in_cur,in_pos-in_cur);
+		in_pos-=in_cur;
+		in_cur=0;
+	}
+	t=read(sock,in_buf+in_pos,BUFFER_SIZE-in_pos);
+	in_pos+=t;
+	
 	pstop();
 	return 0;
 }
 
-char *net_msg( void )
+int net_msg( char **msg )
 {
+	char *p=in_buf+in_cur;
 	pstart();
+	
+	while ( (p<in_buf+in_pos) && (*p) ) p++;
+	if ( (*p==0) && (p<in_buf+in_pos) )
+	{
+		*msg=in_buf+in_cur;
+		in_cur=p-in_buf+1;
+		#ifdef DEBUG_NET
+		printf("=== RECEIVE: \"%s\"\n",*msg);
+		#endif
+	}	else
+	{
+		return -1;
+	}
+	
 	pstop();
-	return NULL;
+	return 0;
 }

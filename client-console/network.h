@@ -10,6 +10,7 @@
 #define __NETWORK_H__
 
 #define BUFFER_SIZE 2048
+#define MINIMUM_BUFSIZE 64
 
 extern int sock;
 
@@ -48,10 +49,10 @@ int net_recv( void );
 
 /*
 	1.	Получение одного нового сообщения
-	2.	---
-	3.	Сообщение, NULL, если ошибка
+	2.	msg - полученное сообщение
+	3.	Не 0, если нет сообщений
 	4.	---
 */
-char *net_msg( void );
+int net_msg( char **msg );
 
 #endif

@@ -16,6 +16,7 @@
 #include "errors/debug.h"
 #include "network.h"
 #include "parse.h"
+#include "ability.h"
 
 #define VERSION 1
 #define PROTOCOL sodalisnpv2
@@ -26,7 +27,7 @@ int main( int argc, char *argv[] )
 {
 	int i, go_on=1;
 	u_int16_t port=PORT;
-	char *host, *login, *password;
+	char *host;
 	pstart();
 	
 	/*
@@ -98,7 +99,7 @@ int main( int argc, char *argv[] )
 	/*
 		соединение и главный цикл
 	*/
-	if ( !net_connect(host,port) )
+	if ( net_connect(host,port) )
 		return EXIT_FAILURE;
 	while ( go_on )
 	{
@@ -115,7 +116,7 @@ int main( int argc, char *argv[] )
 		
 		if ( FD_ISSET(0,&rset) )
 		{
-			if ( !parse_in() )
+			if ( parse_in() )
 			{
 				net_disconnect();
 				return EXIT_FAILURE;
@@ -124,14 +125,14 @@ int main( int argc, char *argv[] )
 		
 		if ( FD_ISSET(sock,&rset) )
 		{
-			if ( (!net_recv()) || (!parse_out()) )
+			if ( net_recv() || parse_out() )
 			{
 				net_disconnect();
 				return EXIT_FAILURE;
 			}
 		}
 	}
-	if ( !net_disconnect() )
+	if ( net_disconnect() )
 		return EXIT_FAILURE;
 	
 	pstop();
