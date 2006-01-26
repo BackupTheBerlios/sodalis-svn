@@ -13,13 +13,13 @@
 #include <time.h>
 #include <stdarg.h>
 
-#include "log/log.h"
-#include "main/ecode.h"
+#include "log.h"
+#include "errors/ecode.h"
 #include "errors/debug.h"
 
 FILE *logstream;
 
-ecode_t openlog( char *file )
+kucode_t openlog( char *file )
 {
 	FILE *f;
 	pstart();
@@ -28,7 +28,7 @@ ecode_t openlog( char *file )
 	if ( f==NULL )
 	{
 		plog(gettext("Failed to open a log file: %s\n"),strerror(errno));
-		return E_FILE;
+		return KE_IO;
 	}
 	
 	logstream=f;
@@ -36,10 +36,10 @@ ecode_t openlog( char *file )
 	plog(gettext("Logging has been started\n"));
 	
 	pstop();
-	return E_NONE;
+	return KE_NONE;
 }
 
-ecode_t closelog( void )
+kucode_t closelog( void )
 {
 	pstart();
 	
@@ -49,13 +49,13 @@ ecode_t closelog( void )
 	if ( fclose(logstream)!=0 )
 	{
 		plog(gettext("Failed to close a log file: %s\n"),strerror(errno));
-		return E_FILE;
+		return KE_IO;
 	}
 	
 	logstream=stdout;
 	
 	pstop();
-	return E_NONE;
+	return KE_NONE;
 }
 
 void plog( char *fmt, ... )

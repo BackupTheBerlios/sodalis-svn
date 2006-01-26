@@ -13,19 +13,21 @@
 #include <locale.h>
 #include <errno.h>
 
+#include "scc.h"
 #include "errors/debug.h"
 #include "network.h"
 #include "parse.h"
 #include "ability.h"
 
-#define VERSION 1
-#define PROTOCOL sodalisnpv2
-#define PORT 1986
+char *login;
+char *password;
+int go_on=1;
+int is_auth=0;
 
 //	scc [parameters] [host] [loing] [password]
 int main( int argc, char *argv[] )
 {
-	int i, go_on=1;
+	int i;
 	u_int16_t port=PORT;
 	char *host;
 	pstart();

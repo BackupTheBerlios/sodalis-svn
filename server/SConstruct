@@ -4,14 +4,12 @@ env=baseenv.Copy(
 	)
 
 env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -g")
-env.Append(CCFLAGS=" -DDEBUG_LOG -DLOG_NET -DLOG_DB")
+env.Append(CCFLAGS=" -DLOG_NET -DLOG_DB")
 env.Append(CCFLAGS=" -DDEBUG_FUNC")
 #env.Append(CCFLAGS=" -O3")
 
 sources = Split("""
 	main/sodalis.c
-	log/log.c
-	other/other.c
 	network/net.c
 	network/nstore.c
 	user/user.c

@@ -9,8 +9,7 @@
 #ifndef __ABILITY_H__
 #define __ABILITY_H__
 
-extern char *login;
-extern char *password;
+extern int max_data_size;
 
 /*
 

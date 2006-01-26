@@ -4,12 +4,15 @@ env=baseenv.Copy(
 	)
 
 env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
+env.Append(CCFLAGS=" -DDEBUG_LOG")
 #env.Append(CCFLAGS=" -O3")
 
 sources = Split("""
 	errors/errors.c
 	cfgreader/cfg.c
 	cfgreader/tree_cfg.c
+	log/log.c
+	other/other.c
 	""")
 
 Default(env.Library("ku2", sources))

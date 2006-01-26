@@ -17,8 +17,6 @@
 #include "ability.h"
 #include "errors/debug.h"
 
-#define ARG_CNT 16
-
 char *p_arg[ARG_CNT];
 int p_argc, p_size[ARG_CNT];
 char p_buf[BUFFER_SIZE];
@@ -30,7 +28,7 @@ int parse_out( void )
 	
 	while ( !net_msg(&msg) )
 	{
-		if ( parse(msg)<=0 )
+		if ( parse(msg,PATYPE_ONESPACE)<=0 )
 			return -1;
 		if ( abil_serv() ) return -1;
 	}
@@ -63,15 +61,17 @@ int parse_in( void )
 	}
 	i=read(0,buf+pos,BUFFER_SIZE-pos);
 	pos+=i;
+	pdebug("read %d bytes\n",i);
 	
 	/*
 		разделение команд
 	*/
 	for (;;)
 	{
-		for ( p=buf+cur; (p<buf+pos) && (*p); p++ );
-		if ( (*p==0) && (p<buf+pos) )
+		for ( p=buf+cur; (p<buf+pos) && (*p!=10); p++ );
+		if ( (*p==10) && (p<buf+pos) )
 		{
+			*p=0;
 			msg=buf+cur;
 			cur=p-buf+1;
 		}	else
@@ -79,7 +79,7 @@ int parse_in( void )
 			break;
 		}
 		
-		if ( parse(msg)<=0 )
+		if ( parse(msg,PATYPE_MANYSPACES)<=0 )
 		{
 			printf(gettext("Please check the command syntax\n"));
 			break;
@@ -92,7 +92,7 @@ int parse_in( void )
 	return 0;
 }
 
-int parse( char *msg )
+int parse( char *msg, int type )
 {
 	int i=1, qu=0, tmp;
 	char *src=msg;
@@ -109,6 +109,12 @@ int parse( char *msg )
 			case ' ':
 				if ( !qu )
 				{
+					if ( type==PATYPE_MANYSPACES )
+					{
+						while ( *src==' ' ) src++;
+						if ( *src==0 ) continue;
+					}
+						
 					*(dst++)=0;
 					if ( i==ARG_CNT )
 					{
@@ -118,8 +124,9 @@ int parse( char *msg )
 					{
 						p_size[i-1]=dst-p_arg[i-1]-1;
 						p_arg[i++]=dst;
+						src++;
 					}
-					src++;
+					
 				}	else
 				{
 					*(dst++)=*(src++);

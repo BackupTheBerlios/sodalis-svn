@@ -18,6 +18,7 @@
 
 #include "network.h"
 #include "errors/debug.h"
+#include "scc.h"
 
 int sock;
 int out_cur=0, in_cur=0;
@@ -116,6 +117,16 @@ int net_recv( void )
 		in_cur=0;
 	}
 	t=read(sock,in_buf+in_pos,BUFFER_SIZE-in_pos);
+	if ( t==-1 )
+	{
+		printf(gettext("Reading failed: %s\n"),strerror(errno));
+		return -1;
+	}
+	if ( t==0 )
+	{
+		printf(gettext("Connection was closed by the server\n"));
+		go_on=0;
+	}
 	in_pos+=t;
 	
 	pstop();

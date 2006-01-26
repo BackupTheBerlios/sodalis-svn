@@ -9,6 +9,13 @@
 #ifndef __PARSE_H__
 #define __PARSE_H__
 
+#define ARG_CNT 64
+#define PATYPE_ONESPACE 0
+#define PATYPE_MANYSPACES 1
+
+extern char *p_arg[ARG_CNT];
+extern int p_argc, p_size[ARG_CNT];
+
 /*
 	1.	Распознать данные, пришедшие из сети
 		и принять соответствующие действия
@@ -36,6 +43,6 @@ int parse_in( void );
 		p_argc - их количество
 	4.	---
 */
-int parse( char *msg );
+int parse( char *msg, int type );
 
 #endif

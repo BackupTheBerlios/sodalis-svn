@@ -6,8 +6,9 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
-#ifndef __OTHER_H__
-#define __OTHER_H__
+#ifndef KU__OTHER_H__
+#define KU__OTHER_H__
+#include "errors/open_code.h"
 
 //	длина строки
 #define QSTR_STRSIZE 2048
@@ -34,4 +35,5 @@ void qdir( char *path );
 */
 int qdir2( char *path );
 
+#include "errors/close_code.h"
 #endif

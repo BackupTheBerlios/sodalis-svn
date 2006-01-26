@@ -8,16 +8,13 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-
-#ifdef DEBUG
-#include <string.h>
 #include <libintl.h>
-#include "log/log.h"
-#endif
-
-#include "other/other.h"
 #include <dirent.h>
 #include <errno.h>
+#include <string.h>
+
+#include "other.h"
+#include "log/log.h"
 
 char *qstr( char *s1, char *s2 )
 {
