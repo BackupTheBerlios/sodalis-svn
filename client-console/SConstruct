@@ -1,10 +1,11 @@
-baseenv=Environment(CPPPATH=[".","../kaneutil2"])
+baseenv=Environment(CPPPATH=[".","commands","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
 
 env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -g")
-env.Append(CCFLAGS=" -DDEBUG_FUNC -DDEBUG_NET")
+#env.Append(CCFLAGS=" -DDEBUG_FUNC -DDEBUG_NET")
+env.Append(CCFLAGS=" -DDEBUG_NET")
 #env.Append(CCFLAGS=" -O3")
 
 sources = Split("""
@@ -12,6 +13,11 @@ sources = Split("""
 	ability.c
 	network.c
 	parse.c
+	
+	commands/msg.c
+	commands/list.c
+	commands/show.c
+	commands/delete.c
 	""")
 
 libs = Split("""

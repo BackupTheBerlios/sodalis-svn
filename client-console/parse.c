@@ -61,7 +61,6 @@ int parse_in( void )
 	}
 	i=read(0,buf+pos,BUFFER_SIZE-pos);
 	pos+=i;
-	pdebug("read %d bytes\n",i);
 	
 	/*
 		разделение команд
@@ -111,8 +110,8 @@ int parse( char *msg, int type )
 				{
 					if ( type==PATYPE_MANYSPACES )
 					{
-						while ( *src==' ' ) src++;
-						if ( *src==0 ) continue;
+						while ( src[1]==' ' ) src++;
+						if ( src[1]==0 ) continue;
 					}
 						
 					*(dst++)=0;

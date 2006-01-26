@@ -98,14 +98,14 @@ int abil_msgu( usr_record *usr )
 		//	обновление базы двнных
 		if ( tid )
 		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
-			uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
+			uid,usr->id,time(NULL),p_arg[p_argc==3?2:3]))!=E_NONE )
 		{
 			REQ_FAIL("MSGU");
 			SENDU(usr,"FAILED MSGU");
 			return 0;
 		}
 		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %d, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
-			uid,usr->id,time(NULL),p_arg[3]))!=E_NONE )
+			uid,usr->id,time(NULL),p_arg[p_argc==3?2:3]))!=E_NONE )
 		{
 			REQ_FAIL("MSGU");
 			SENDU(usr,"FAILED MSGU");
@@ -203,14 +203,14 @@ int abil_msgg( usr_record *usr )
 		//	обновление базы двнных
 		if ( tip )
 		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %s, %d, %d, '%s', DEFAULT, DEFAULT, 's')", \
-			dbres[0],usr->id,time(NULL),p_arg[3]))!=E_NONE )
+			dbres[0],usr->id,time(NULL),p_arg[p_argc==3?2:3]))!=E_NONE )
 		{
 			REQ_FAIL("MSGG");
 			SENDU(usr,"FAILED MSGG");
 			return 0;
 		}
 		if ( db_nr_query(vstr("INSERT INTO messages VALUES (DEFAULT, %s, %d, %d, '%s', DEFAULT, DEFAULT, 'i')", \
-			dbres[0],usr->id,time(NULL),p_arg[3]))!=E_NONE )
+			dbres[0],usr->id,time(NULL),p_arg[p_argc==3?2:3]))!=E_NONE )
 		{
 			REQ_FAIL("MSGG");
 			SENDU(usr,"FAILED MSGG");

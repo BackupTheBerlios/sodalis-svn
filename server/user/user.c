@@ -337,6 +337,8 @@ ecode_t usr_getmsg( usr_record *usr )
 	while ( (*cur!=0) && (cur-usr->in<usr->inpos) )
 		cur++;
 	
+	if ( cur-usr->in>=usr->inpos )
+		return E_NONE;
 	if ( *cur==0 )
 	{
 		usr->msg=usr->instart;
