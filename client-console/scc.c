@@ -23,6 +23,7 @@ char *login;
 char *password;
 int go_on=1;
 int is_auth=0;
+int data_mode=DATA_NORMAL;
 
 //	scc [parameters] [host] [loing] [password]
 int main( int argc, char *argv[] )

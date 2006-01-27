@@ -18,6 +18,7 @@ sources = Split("""
 	commands/list.c
 	commands/show.c
 	commands/delete.c
+	commands/send.c
 	""")
 
 libs = Split("""

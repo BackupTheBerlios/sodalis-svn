@@ -21,6 +21,7 @@
 #include "other/other.h"
 
 #include "commands/msg.h"
+#include "commands/send.h"
 
 int max_data_size;
 
@@ -127,9 +128,14 @@ int abil_serv( void )
 	{
 		if ( abil_msg_serv() ) return -1;
 	}	else
+	if ( !strcmp(p_arg[0],"PHALLOW") )
+	{
+		if ( abil_send_start() ) return -1;
+	}	else
 	{
 		inv_serv();
-		return -1;
+		//return -1;
+		return 0;
 	}
 	
 	pstop();
@@ -163,6 +169,10 @@ int abil_usr( void )
 	if ( !strcmp(p_arg[0],"RM") || !strcmp(p_arg[0],"DELETE") )
 	{
 		//if ( abil_delete() ) return -1;
+	}	else
+	if ( !strcmp(p_arg[0],"SEND") )
+	{
+		if ( abil_send() ) return -1;
 	}	else
 	{
 		printf(gettext("Unknown command!\n"));

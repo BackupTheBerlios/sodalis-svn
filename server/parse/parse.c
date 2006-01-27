@@ -25,6 +25,19 @@ int parse_msg( usr_record *usr )
 {
 	pstart();
 	
+	//	двоичные данные
+	if ( usr->dataflags )
+	{
+		if ( (usr->dataflags&UF_DATAPHOTOIN)==UF_DATAPHOTOIN )
+		{
+			return abil_photo_data(usr);
+		}	else
+		{
+			return 1;
+		}
+	}	else
+	
+	//	управление клиентом
 	if ( !strcmp(p_arg[0],"LOGOUT") )
 	{
 		usr_write(usr,"DISCON REQ");
@@ -115,55 +128,12 @@ int parse_msg( usr_record *usr )
 		if ( abil_break(usr) ) return 1;
 	}	else
 	
+	//	ошибка
 	{
 		pdebug("recv %s\n",p_arg[0]);
 		plog(gettext("Invalid command (uid=%d)\n"),usr->id);
 		usr_write(usr,"DISCON CMD");
 		return 1;
-	}
-	
-	pstop();
-	return 0;
-}
-
-int parse_data( usr_record *usr )
-{
-	int status;
-	pstart();
-	
-	if ( p_argc!=1 )
-	{
-		plog(gettext("Invalid data for datamode (uid=%d)\n"),usr->id);
-		usr_write(usr,"DISCON CMD");
-		return 1;
-	}
-	
-	pdebug("size: %d cur: %d arg:'%s' argsz:%d\n",usr->data_sz,usr->data_cur,p_arg[0],p_size[0]);
-	
-	if ( p_size[0]>usr->data_sz-usr->data_cur )
-	{
-		plog(gettext("Data size is too big for the buffer (uid=%d)\n"),usr->id);
-		usr->data_cur=usr->data_sz;
-		status=ABIL_ST_FAILURE;
-	}	else
-	{
-		_
-		memcpy(usr->data+usr->data_cur,p_arg[0],p_size[0]);
-		usr->data_cur+=p_size[0];
-		status=ABIL_ST_SUCCESS;
-	}
-	
-	pdebug("cur: %d\n",usr->data_cur);
-	
-	if( usr->data_cur==usr->data_sz )
-	{
-		if ( (usr->dataflags&UF_DATAPHOTOIN)==UF_DATAPHOTOIN )
-		{
-			return abil_photo_data(usr,status);
-		}	else
-		{
-			return 1;
-		}
 	}
 	
 	pstop();

@@ -27,7 +27,7 @@ int abil_photo( usr_record *usr )
 			abil_num(size,4,p,"PHOTO");
 			
 			//	проверка размера фото
-			if ( size>o_photo_size )
+			if ( size>o_photo_size*1024 )
 			{
 				plog(gettext("Photo size is to big (uid=%d on %s)\n"),usr->id,"PHOTO");
 				SENDU(usr,"FAILED PHOTO");
@@ -94,31 +94,27 @@ int abil_photo( usr_record *usr )
 	return 0;
 }
 
-int abil_photo_data( usr_record *usr, int status )
+int abil_photo_data( usr_record *usr )
 {
+	char *name, *about;
+	void *data;
+	int album;
 	pstart();
 	
-	usr->dataflags&=!UF_DATAPHOTOIN;
-	if ( status==ABIL_ST_FAILURE )
-	{
-		dfree(usr->data);
-		SENDU(usr,"FAILED PHOTO");
-	}	else
-	{
-		char *name, *about;
-		void *data;
-		int album;
-		
-		album=*(int*)usr->data;
-		name=usr->data+sizeof(int);
-		for ( about=name; *about; about++ );
-		about++;
-		for ( data=about; *(char*)data; data++ );
-		data++;
-		pdebug("===== here added photo '%s'; '%s' to album %d\n",name,about,album);
-		dfree(usr->data);
-		SENDU(usr,"PHOK");
-	}
+	usr->dataflags&=~UF_DATAPHOTOIN;
+	
+	album=*(int*)(usr->data);
+	pdebug("album=%d\n",album);
+	name=usr->data+sizeof(int);
+	pdebug("name='%s'\n",name);
+	for ( about=name; *about; about++ );
+	about++;
+	pdebug("about='%s'\n",about);
+	for ( data=about; *(char*)data; data++ );
+	data++;
+	pdebug("===== here added photo '%s'; '%s' to album %d\n",name,about,album);
+	dfree(usr->data);
+	SENDU(usr,"PHOK");
 	
 	pstop();
 	return 0;

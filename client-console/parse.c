@@ -16,6 +16,7 @@
 #include "network.h"
 #include "ability.h"
 #include "errors/debug.h"
+#include "scc.h"
 
 char *p_arg[ARG_CNT];
 int p_argc, p_size[ARG_CNT];
@@ -26,11 +27,17 @@ int parse_out( void )
 	char *msg;
 	pstart();
 	
-	while ( !net_msg(&msg) )
+	if ( data_mode==DATA_RAW )
 	{
-		if ( parse(msg,PATYPE_ONESPACE)<=0 )
-			return -1;
-		if ( abil_serv() ) return -1;
+		
+	}	else
+	{
+		while ( !net_msg(&msg) )
+		{
+			if ( parse(msg,PATYPE_ONESPACE)<=0 )
+				return -1;
+			if ( abil_serv() ) return -1;
+		}
 	}
 	
 	pstop();

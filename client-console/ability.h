@@ -14,6 +14,7 @@ extern int max_data_size;
 int str2num( char *str, int *data );
 void inv_serv( void );
 void inv_syn( void );
+void uppertext( char *text );
 
 /*
 

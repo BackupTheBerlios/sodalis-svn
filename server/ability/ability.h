@@ -9,9 +9,6 @@
 #ifndef __ABILITY_H__
 #define __ABILITY_H__
 
-#define ABIL_ST_SUCCESS 1
-#define ABIL_ST_FAILURE 0
-
 #include "admin/admin.h"
 #include "messages/messages.h"
 #include "friends/friends.h"

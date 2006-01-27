@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <libintl.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ability.h"
 #include "parse.h"

@@ -113,6 +113,8 @@ ecode_t usr_add( net_id *id )
 	usr->outpos=0;
 	usr->outstart=0;
 	
+	usr->dataflags=0;
+	
 	usr->netid=id;
 	id->data=(void*)usr;
 	
@@ -199,7 +201,6 @@ ecode_t usr_auth( usr_record *usr )
 	usr->data=NULL;
 	usr->data_sz=0;
 	usr->data_cur=0;
-	usr->dataflags=0;
 	
 	if ( (kucode=abtree_ins_usr(utree,usr))!=KE_NONE )
 	{
@@ -262,14 +263,7 @@ ecode_t usr_manage( usr_record *usr )
 			//	обновление состояния
 			db_nr_query(vstr("UPDATE logins SET last_ip='%s', last_date=%d, online=1 "\
 					"WHERE id=%d",usr->netid->ip,time(NULL),usr->id));
-			//	здесь обработка сообщений + флаги
-			if ( usr->dataflags )
-			{
-				if ( parse_data(usr) )
-				{
-					return E_DISCONNECT;
-				}
-			}	else
+			//	здесь обработка сообщений
 			if ( parse_msg(usr) )
 			{
 				return E_DISCONNECT;
@@ -292,36 +286,60 @@ ecode_t usr_read( usr_record *usr )
 	int rcnt;
 	pstart();
 	
-	if ( usr->inpos+BUFFER_MINIMUM_FREE>=BUFFER_SIZE_USER )
+	if ( usr->dataflags )
 	{
-		//	буффер переполнен, сдвигаем
-		if ( usr->instart==0 )
+		//	чтение бинарных данных
+		rcnt=read(usr->sock,usr->data+usr->data_cur,usr->data_sz-usr->data_cur);
+		if ( (rcnt==-1) && (errno!=EAGAIN) )
 		{
-			//	нет места, ошибка
-			plog(gettext("Reading buffer is full, cannot read any more (fd=%d)\n"),usr->sock);
-			return E_OBUFFER;
+			plog(gettext("Reading failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+			return E_FILE;
 		}	else
+		if ( rcnt==0 )
 		{
-			memmove(usr->in,usr->in+usr->inpos,usr->inpos-usr->instart);
-			usr->inpos-=usr->instart;
-			usr->instart=0;
+			return E_DISCONNECT;
+		}	else
+		if ( rcnt>0 )
+		{
+			usr->data_cur+=rcnt;
 		}
-	}
-	
-	//	чтение в буффер
-	rcnt=read(usr->sock,usr->in+usr->inpos,BUFFER_SIZE_USER-usr->inpos);
-	if ( (rcnt==-1) && (errno!=EAGAIN) )
-	{
-		plog(gettext("Reading failed (fd=%d): %s\n"),usr->sock,strerror(errno));
-		return E_FILE;
+		if ( usr->data_cur==usr->data_sz )
+		{
+			usr->dataflags|=UF_DATA_HERE;
+		}
 	}	else
-	if ( rcnt==0 )
 	{
-		return E_DISCONNECT;
-	}	else
-	if ( rcnt>0 )
-	{
-		usr->inpos+=rcnt;
+		if ( usr->inpos+BUFFER_MINIMUM_FREE>=BUFFER_SIZE_USER )
+		{
+			//	буффер переполнен, сдвигаем
+			if ( usr->instart==0 )
+			{
+				//	нет места, ошибка
+				plog(gettext("Reading buffer is full, cannot read any more (fd=%d)\n"),usr->sock);
+				return E_OBUFFER;
+			}	else
+			{
+				memmove(usr->in,usr->in+usr->inpos,usr->inpos-usr->instart);
+				usr->inpos-=usr->instart;
+				usr->instart=0;
+			}
+		}
+		
+		//	чтение в буффер
+		rcnt=read(usr->sock,usr->in+usr->inpos,BUFFER_SIZE_USER-usr->inpos);
+		if ( (rcnt==-1) && (errno!=EAGAIN) )
+		{
+			plog(gettext("Reading failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+			return E_FILE;
+		}	else
+		if ( rcnt==0 )
+		{
+			return E_DISCONNECT;
+		}	else
+		if ( rcnt>0 )
+		{
+			usr->inpos+=rcnt;
+		}
 	}
 	
 	pstop();
@@ -333,18 +351,36 @@ ecode_t usr_getmsg( usr_record *usr )
 	char *cur;
 	pstart();
 	
+	if ( usr->dataflags )
+	{
+		pstop();
+		if ( (usr->dataflags&UF_DATA_HERE)==UF_DATA_HERE )
+		{
+			pdebug("fl: %d\n",usr->dataflags);
+			usr->dataflags&=~UF_DATA_HERE;
+			pdebug("fl: %d\n",usr->dataflags);
+			return E_AGAIN;
+		}	else
+		{
+			return E_NONE;
+		}
+	}
+	
 	cur=usr->in+usr->instart;
 	while ( (*cur!=0) && (cur-usr->in<usr->inpos) )
 		cur++;
 	
 	if ( cur-usr->in>=usr->inpos )
+	{
+		pstop();
 		return E_NONE;
+	}
 	if ( *cur==0 )
 	{
 		usr->msg=usr->instart;
 		usr->instart=cur-usr->in+1;
 		#ifdef LOG_NET
-		plog("*** RECIEVED (fd=%d, uid=%d, size=%d) *** \"%s\"\n",usr->sock,usr->id,strlen(usr->in+usr->msg),usr->in+usr->msg);
+		plog("*** RECEIVED (fd=%d, uid=%d, size=%d) *** \"%s\"\n",usr->sock,usr->id,strlen(usr->in+usr->msg),usr->in+usr->msg);
 		#endif
 		
 		if ( parse(usr->in+usr->msg)<1 )

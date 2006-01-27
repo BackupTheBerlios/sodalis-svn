@@ -17,7 +17,8 @@
 /*
 	флаги datamode
 */
-#define UF_DATAPHOTOIN 1
+#define UF_DATA_HERE 1
+#define UF_DATAPHOTOIN 2
 
 #include "network/net_id.h"
 

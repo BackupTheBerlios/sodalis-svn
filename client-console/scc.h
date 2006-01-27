@@ -13,9 +13,13 @@
 #define PROTOCOL sodalisnpv2
 #define PORT 1986
 
+#define DATA_NORMAL 0
+#define DATA_RAW 1
+
 extern char *login;
 extern char *password;
 extern int go_on;
 extern int is_auth;
+extern int data_mode;
 
 #endif

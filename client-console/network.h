@@ -55,4 +55,10 @@ int net_recv( void );
 */
 int net_msg( char **msg );
 
+int net_start_data( void );
+
+int net_stop_data( void );
+
+int net_get_data( void );
+
 #endif

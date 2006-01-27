@@ -154,3 +154,18 @@ int net_msg( char **msg )
 	pstop();
 	return 0;
 }
+
+int net_start_data( void )
+{
+	return 0;
+}
+
+int net_stop_data( void )
+{
+	return 0;
+}
+
+int net_get_data( void )
+{
+	return 0;
+}
