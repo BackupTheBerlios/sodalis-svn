@@ -6,6 +6,13 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
+#include <errno.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "ability.h"
 #include "common.h"
 #include "main/options.h"
@@ -96,9 +103,10 @@ int abil_photo( usr_record *usr )
 
 int abil_photo_data( usr_record *usr )
 {
-	char *name, *about;
+	char *name, *about, *photodir;
 	void *data;
 	int album;
+	int fd, i;
 	pstart();
 	
 	usr->dataflags&=~UF_DATAPHOTOIN;
@@ -113,6 +121,46 @@ int abil_photo_data( usr_record *usr )
 	for ( data=about; *(char*)data; data++ );
 	data++;
 	pdebug("===== here added photo '%s'; '%s' to album %d\n",name,about,album);
+	
+	photodir=vstr("%s%d",o_photo_dir,usr->id);
+	if ( qdir2(photodir) )
+	{
+		plog(gettext("Photo directory does not exist, creating (uid=%d)\n"),usr->id);
+		if ( mkdir(photodir,-1)==-1 )
+		{
+			plog(gettext("Failed to create a directory: %s\n"),strerror(errno));
+			SENDU(usr,"FAILED PHOTO");
+			return 0;
+		}
+	}
+	
+	fd=open(vstr("%stemp.photo",photodir),O_WRONLY|O_CREAT);
+	if ( fd==-1 )
+	{
+		plog(gettext("Failed to open a file '%stemp.photo` for writing: %s\n"), \
+				photodir,strerror(errno));
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	
+	i=0;
+	while ( i<usr->data_sz-(data-usr->data) )
+	{
+		int t;
+		t=write(fd,data+i,usr->data_sz-(data-usr->data)-i);
+		if ( t<=0 )
+		{
+			plog(gettext("Cannot write to file '%stemp.photo`: %s\n"),photodir,strerror(errno));
+			SENDU(usr,"FAILED PHOTO");
+			return 0;
+		}
+		i+=t;
+	}
+	
+	close(fd);
+	
+	//if ( db_nr_query(vstr("INSERT photos VALUES (DEFAULT, %d, %d, '%s', '%s', 
+	
 	dfree(usr->data);
 	SENDU(usr,"PHOK");
 	

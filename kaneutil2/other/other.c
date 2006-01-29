@@ -63,6 +63,7 @@ void qdir( char *path )
 int qdir2( char *path )
 {
 	DIR *dir;
+	qdir(path);
 	dir=opendir(path);
 	if ( dir==NULL )
 	{
@@ -71,7 +72,6 @@ int qdir2( char *path )
 	}	else
 	{
 		if ( closedir(dir) ) return 1;
-		qdir(path);
 		return 0;
 	}
 }
