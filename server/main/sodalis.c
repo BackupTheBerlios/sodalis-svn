@@ -31,6 +31,9 @@
 #include "cfgreader/cfg.h"
 #include "main/options.h"
 
+//	путь запуска
+char *exec_path;
+
 //	код ошибки
 ecode_t ecode;
 
@@ -54,6 +57,7 @@ int o_breaklev=CFG_BREAKLEV;
 int o_defmsgtype=CFG_DEFMSGTYPE;
 char o_photo_dir[CFG_BUFFER]=CFG_PHOTODIR;
 int o_photo_size=CFG_PHOTOSIZE;
+int o_photo_area=CFG_PHOTOAREA;
 
 //	функции
 char *errtext( ecode_t c )
@@ -154,6 +158,7 @@ int main( int argc, char *argv[] )
 	/*
 		инициализация переменных
 	*/
+	exec_path=argv[0];
 	logstream=stdout;
 	server_is_on=1;
 	

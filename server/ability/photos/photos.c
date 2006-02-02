@@ -12,6 +12,9 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <math.h>
+#include <magick/api.h>
 
 #include "ability.h"
 #include "common.h"
@@ -107,10 +110,18 @@ int abil_photo_data( usr_record *usr )
 	void *data;
 	int album;
 	int fd, i;
+	
+	ExceptionInfo exception;
+    Image *image, *image_thumb;
+	ImageInfo *image_info;
+	int imw, imh, imtw, imth;
+	double ims;
+	
 	pstart();
 	
 	usr->dataflags&=~UF_DATAPHOTOIN;
 	
+	//	получение данных
 	album=*(int*)(usr->data);
 	pdebug("album=%d\n",album);
 	name=usr->data+sizeof(int);
@@ -122,6 +133,7 @@ int abil_photo_data( usr_record *usr )
 	data++;
 	pdebug("===== here added photo '%s'; '%s' to album %d\n",name,about,album);
 	
+	//	создание папки
 	photodir=vstr("%s%d",o_photo_dir,usr->id);
 	if ( qdir2(photodir) )
 	{
@@ -134,6 +146,7 @@ int abil_photo_data( usr_record *usr )
 		}
 	}
 	
+	//	запись файла
 	fd=open(vstr("%stemp.photo",photodir),O_WRONLY|O_CREAT);
 	if ( fd==-1 )
 	{
@@ -159,7 +172,99 @@ int abil_photo_data( usr_record *usr )
 	
 	close(fd);
 	
-	//if ( db_nr_query(vstr("INSERT photos VALUES (DEFAULT, %d, %d, '%s', '%s', 
+	/*
+		Обработка изображения
+	*/
+	//	загрузка
+	InitializeMagick(exec_path);
+	GetExceptionInfo(&exception);
+	image_info=CloneImageInfo(NULL);
+	if ( image_info==NULL )
+	{
+		plog(gettext("Failed to create an image info structure\n"));
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	strcpy(image_info->filename,vstr("%stemp.photo",photodir));
+	image=ReadImage(image_info,&exception);
+	if (exception.severity != UndefinedException)
+	{
+		plog(gettext("Got an ImageMagick exception no. %d (%s)\n"), \
+				exception.error_number,GetLocaleExceptionMessage(exception.severity,exception.reason));
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	if ( image==NULL )
+	{
+		plog(gettext("Image was not loaded\n"));
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	
+	//	преобразование размеров
+	imw=image->columns;
+	imh=image->rows;
+	ims=sqrt((double)o_photo_area/(double)(imw*imh));
+	imtw=(int)(imw*ims);
+	imth=(int)(imh*ims);
+	pdebug("scaled to %dx%d\n",imw,imh);
+	image_thumb=ResizeImage(image,imtw,imth,SincFilter,1,&exception);
+	pdebug("filename: %s\n",image_thumb->filename);
+	if (exception.severity != UndefinedException)
+	{
+		plog(gettext("Got an ImageMagick exception no. %d (%s)\n"), \
+				exception.error_number,GetLocaleExceptionMessage(exception.severity,exception.reason));
+		DestroyImage(image);
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	if ( image_thumb==NULL )
+	{
+		plog(gettext("Image was not resized\n"));
+		DestroyImage(image);
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	
+	//	запись
+	strcpy(image_thumb->filename,vstr("%stemp.photo_thumb",photodir));
+	if ( WriteImage(image_info,image_thumb)==MagickFalse )
+	{
+		plog(gettext("Failed to write an image\n"));
+		DestroyImage(image);
+		DestroyImage(image_thumb);
+		DestroyExceptionInfo(&exception);
+		DestroyMagick();
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	
+	image_info=DestroyImageInfo(image_info);
+	DestroyImage(image);
+	DestroyImage(image_thumb);
+	DestroyExceptionInfo(&exception);
+	DestroyMagick();
+	
+	/*
+		Добавление в базу данных
+	*/
+	if ( db_nr_query(vstr("INSERT photos VALUES (DEFAULT, %d, %d, '%s', '%s', %d, %d, DEFAULT)", \
+			usr->id,album,name,about,imw,imh))!=E_NONE )
+	{
+		REQ_FAIL("PHOTO");
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
 	
 	dfree(usr->data);
 	SENDU(usr,"PHOK");

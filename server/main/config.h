@@ -29,6 +29,7 @@
 
 #define CFG_PHOTODIR "/var/sodalis/ph"
 #define CFG_PHOTOSIZE 512
+#define CFG_PHOTOAREA 120000
 
 extern int server_is_on;
 

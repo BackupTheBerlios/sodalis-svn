@@ -10,6 +10,9 @@
 #define __OPTIONS_H__
 #include "cfgreader/cfg.h"
 
+//	путь запуска
+extern char *exec_path;
+
 //	сеть
 extern int o_port;
 extern int o_portlog;
@@ -32,5 +35,6 @@ extern int o_defmsgtype;
 //	фотографии
 extern char o_photo_dir[CFG_BUFFER];
 extern int o_photo_size;
+extern int o_photo_area;
 
 #endif
