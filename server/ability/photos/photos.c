@@ -29,7 +29,43 @@ int abil_photo( usr_record *usr )
 	switch ( p_argc )
 	{
 		case 2:	// удаление фото
+			abil_num(tid,1,p,"PHOTO");
+			
+			//	проверка прав на фото
+			if ( db_query(vstr("SELECT album FROM photos WHERE id='%d' AND owner='%d'",tid,usr->id))!=1 )
+			{
+				REQ_FAIL("PHOTO");
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			if ( (dbres=db_row())==NULL )
+			{
+				REQ_FAIL("PHOTO");
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			
+			//	удаление записи о фото
+			if ( (db_nr_query(vstr("DELETE FROM photos WHERE id='%d'",tid))!=E_NONE) || \
+					(db_nr_query(vstr("UPDATE photo_albums SET photos=photos-1 WHERE id='%s'",dbres[0]))!=E_NONE) )
+			{
+				REQ_FAIL("PHOTO");
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			
+			//	удаление файлов
+			if ( unlink(vstr("%s%d/%d.jpg",o_photo_dir,usr->id,tid))==-1 )
+			{
+				plog(gettext("Failed to delete a file: %s\n"),strerror(errno));
+			}
+			if ( unlink(vstr("%s%d/%d_sm.jpg",o_photo_dir,usr->id,tid))==-1 )
+			{
+				plog(gettext("Failed to delete a file: %s\n"),strerror(errno));
+			}
+			
 			break;
+			
 		case 3:	// запрос
 			break;
 		case 5: // создание
@@ -116,6 +152,7 @@ int abil_photo_data( usr_record *usr )
 	ImageInfo *image_info;
 	int imw, imh, imtw, imth;
 	double ims;
+	int photo_id;
 	
 	pstart();
 	
@@ -123,15 +160,14 @@ int abil_photo_data( usr_record *usr )
 	
 	//	получение данных
 	album=*(int*)(usr->data);
-	pdebug("album=%d\n",album);
 	name=usr->data+sizeof(int);
-	pdebug("name='%s'\n",name);
 	for ( about=name; *about; about++ );
 	about++;
-	pdebug("about='%s'\n",about);
 	for ( data=about; *(char*)data; data++ );
 	data++;
-	pdebug("===== here added photo '%s'; '%s' to album %d\n",name,about,album);
+	
+	pdebug("name: %s;\n",name);
+	pdebug("about: %s;\n",about);
 	
 	//	создание папки
 	photodir=vstr("%s%d",o_photo_dir,usr->id);
@@ -141,17 +177,19 @@ int abil_photo_data( usr_record *usr )
 		if ( mkdir(photodir,-1)==-1 )
 		{
 			plog(gettext("Failed to create a directory: %s\n"),strerror(errno));
+			dfree(usr->data);
 			SENDU(usr,"FAILED PHOTO");
 			return 0;
 		}
 	}
 	
 	//	запись файла
-	fd=open(vstr("%stemp.photo",photodir),O_WRONLY|O_CREAT);
+	fd=open(vstr("%stemp.photo",photodir),O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
 	if ( fd==-1 )
 	{
 		plog(gettext("Failed to open a file '%stemp.photo` for writing: %s\n"), \
 				photodir,strerror(errno));
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -164,6 +202,7 @@ int abil_photo_data( usr_record *usr )
 		if ( t<=0 )
 		{
 			plog(gettext("Cannot write to file '%stemp.photo`: %s\n"),photodir,strerror(errno));
+			dfree(usr->data);
 			SENDU(usr,"FAILED PHOTO");
 			return 0;
 		}
@@ -178,12 +217,17 @@ int abil_photo_data( usr_record *usr )
 	//	загрузка
 	InitializeMagick(exec_path);
 	GetExceptionInfo(&exception);
+	pdebug("name: %s;\n",name);
+	pdebug("name: %p;\n",name);
 	image_info=CloneImageInfo(NULL);
+	pdebug("name: %s;\n",name);
+	pdebug("name: %p;\n",name);
 	if ( image_info==NULL )
 	{
 		plog(gettext("Failed to create an image info structure\n"));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -195,6 +239,7 @@ int abil_photo_data( usr_record *usr )
 				exception.error_number,GetLocaleExceptionMessage(exception.severity,exception.reason));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -203,9 +248,13 @@ int abil_photo_data( usr_record *usr )
 		plog(gettext("Image was not loaded\n"));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
+	
+	pdebug("name: %s;\n",name);
+	pdebug("about: %s;\n",about);
 	
 	//	преобразование размеров
 	imw=image->columns;
@@ -223,6 +272,7 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -232,9 +282,13 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
+	
+	pdebug("name: %s;\n",name);
+	pdebug("about: %s;\n",about);
 	
 	//	запись
 	strcpy(image_thumb->filename,vstr("%stemp.photo_thumb",photodir));
@@ -245,6 +299,7 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image_thumb);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -255,6 +310,9 @@ int abil_photo_data( usr_record *usr )
 	DestroyExceptionInfo(&exception);
 	DestroyMagick();
 	
+	pdebug("name: %s;\n",name);
+	pdebug("about: %s;\n",about);
+	
 	/*
 		Добавление в базу данных
 	*/
@@ -262,6 +320,29 @@ int abil_photo_data( usr_record *usr )
 			usr->id,album,name,about,imw,imh))!=E_NONE )
 	{
 		REQ_FAIL("PHOTO");
+		dfree(usr->data);
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	photo_id=db_id();
+	
+	/*
+		Переименование файлов
+	*/
+	if ( (rename(vstr("%stemp.photo",photodir),vstr("%s%d.jpg",photodir,photo_id))==-1) || \
+		(rename(vstr("%stemp.photo_thumb",photodir),vstr("%s%d_sm.jpg",photodir,photo_id))==-1) )
+	{
+		plog(gettext("Failed to rename photo files: %s\n"),strerror(errno));
+		db_nr_query(vstr("DELETE FROM photos WHERE id='%d'",photo_id));
+		dfree(usr->data);
+		SENDU(usr,"FAILED PHOTO");
+		return 0;
+	}
+	
+	if ( db_nr_query(vstr("UPDATE photo_albums SET photos=photos+1 WHERE id='%d'",album))!=E_NONE )
+	{
+		REQ_FAIL("PHOTO");
+		dfree(usr->data);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}

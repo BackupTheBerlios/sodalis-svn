@@ -241,6 +241,7 @@ int main( int argc, char *argv[] )
 			(cfg_query("lev_stop","i",&o_stoplev)!=KE_NONE) || \
 			(cfg_query("lev_break","i",&o_breaklev)!=KE_NONE) || \
 			(cfg_query("photo_dir","s",o_photo_dir)!=KE_NONE) || \
+			(cfg_query("photo_area","i",&o_photo_area)!=KE_NONE) || \
 			(cfg_query("photo_size","i",&o_photo_size)!=KE_NONE))
 		{
 			plog(gettext("Failed to add values to a the config query\n"));
