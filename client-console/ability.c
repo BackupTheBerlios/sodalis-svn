@@ -121,7 +121,7 @@ int abil_serv( void )
 	if ( !strcmp(p_arg[0],"ACCEPTED") )
 	{
 		printf(gettext("Authorization is successful!\n"));
-		if ( net_send("LSM NEW") ) return -1;
+		//if ( net_send("LSM NEW") ) return -1;
 		is_auth=1;
 	}	else
 	if ( !strcmp(p_arg[0],"MSGU") )
@@ -149,10 +149,19 @@ int abil_usr( void )
 	
 	uppertext(p_arg[0]);
 	
+	if ( !strcmp(p_arg[0],"RAW") )
+	{
+		if ( p_argc!=2 )
+		{
+			inv_syn();
+		}	else
+		{
+			if ( net_send(p_arg[1]) ) return -1;
+		}
+	}	else
 	if ( !strcmp(p_arg[0],"QUIT") )
 	{
-		if ( net_send("DISCON REQ") ) return -1;
-		go_on=0;
+		if ( net_send("LOGOUT") ) return -1;
 	}	else
 	if ( !strcmp(p_arg[0],"MSG") || !strcmp(p_arg[0],"MESSAGE") )
 	{
@@ -160,7 +169,7 @@ int abil_usr( void )
 	}	else
 	if ( !strcmp(p_arg[0],"LS") || !strcmp(p_arg[0],"LIST") )
 	{
-		//if ( abil_list() ) return -1;
+		if ( abil_list() ) return -1;
 	}	else
 	if ( !strcmp(p_arg[0],"S") || !strcmp(p_arg[0],"SHOW") )
 	{

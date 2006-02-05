@@ -67,7 +67,9 @@ int abil_photo( usr_record *usr )
 			break;
 			
 		case 3:	// запрос
+			
 			break;
+			
 		case 5: // создание
 			abil_num(album,3,p,"PHOTO");
 			abil_num(size,4,p,"PHOTO");
@@ -356,47 +358,148 @@ int abil_photo_data( usr_record *usr )
 
 int abil_chalb( usr_record *usr )
 {
+	int photo, album;
+	int photos, maxph, alb_old;
+	char *p, **dbres;
 	pstart();
+	
+	CHECK_ARGC(3,"CHALB");
+	abil_num(photo,1,p,"CHALB");
+	abil_num(album,2,p,"CHALB");
+	
+	//	проверка альбома
+	if ( db_query(vstr("SELECT photos, maxphotos FROM photo_albums " \
+			"WHERE id='%d' AND owner='%d'",album,usr->id))!=1 )
+	{
+		REQ_FAIL("CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	if ( (dbres=db_row())==NULL )
+	{
+		REQ_FAIL("CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	abil_str2num(photos,dbres[0],p,"CHALB");
+	abil_str2num(maxph,dbres[1],p,"CHALB");
+	
+	//	проверка фотографии
+	if ( db_query(vstr("SELECT album FROM photos WHERE id='%d' AND owner='%d'",photo,usr->id))!=1 )
+	{
+		REQ_FAIL("CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	if ( (dbres=db_row())==NULL )
+	{
+		REQ_FAIL("CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	abil_str2num(alb_old,dbres[0],p,"CHALB");
+	
+	//	можно ли переместить?
+	if ( album==alb_old )
+	{
+		plog(gettext("Destanation album matches with the source (uid=%d on %s)\n"),usr->id,"CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	if ( photos>=maxph )
+	{
+		plog(gettext("User cannot create more photos in album %d (uid=%d on %s)\n"),album,usr->id,"CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	
+	//	перемещение
+	if ( db_nr_query(vstr("UPDATE photos AS ph, photo_albums AS al1, photo_albums AS al2 " \
+			"SET ph.album='%d', al1.photos=al1.photos-1, al2.photos=al2.photos+1 " \
+			"WHERE ph.id='%d' AND al1.id='%d' AND al2.id='%d'", \
+			album,photo,alb_old,album))!=E_NONE )
+	{
+		REQ_FAIL("CHALB");
+		SENDU(usr,"FAILED CHALB");
+		return 0;
+	}
+	
 	pstop();
 	return 0;
 }
 
 int abil_chmph( usr_record *usr )
 {
+	int photo;
+	char *p;
 	pstart();
+	
+	CHECK_ARGC(2,"CHMPH");
+	abil_num(photo,1,p,"CHMPH");
+	
+	//	проверка фотографии
+	if ( db_query(vstr("SELECT id FROM photos WHERE id='%d' AND owner='%d'",photo,usr->id))!=1 )
+	{
+		REQ_FAIL("CHMPH");
+		SENDU(usr,"FAILED CHMPH");
+		return 0;
+	}
+	
+	//	установка нового фото
+	if ( db_nr_query(vstr("UPDATE logins SET main_photo='%d' WHERE id='%d'",photo,usr->id))!=E_NONE )
+	{
+		REQ_FAIL("CHMPH");
+		SENDU(usr,"FAILED CHMPH");
+		return 0;
+	}
+	
 	pstop();
 	return 0;
 }
 
 int abil_album( usr_record *usr )
 {
-	int albid, uid;
+	int albid;
 	char *p, **dbres;
+	int i,j;
 	pstart();
 	
 	switch ( p_argc )
 	{
 		case 2: // удаление альбома
 			abil_num(albid,1,p,"ALBUM");
-			if ( db_query(vstr("SELECT owner FROM photo_albums WHERE id='%d'",albid))!=1 )
+			if ( db_query(vstr("SELECT owner FROM photo_albums WHERE id='%d' AND owner='%d'",albid,usr->id))!=1 )
 			{
 				REQ_FAIL("ALBUM");
 				SENDU(usr,"FAILED ALBUM");
 				return 0;
 			}
-			if ( (dbres=db_row())==NULL )
+			
+			//	удаление фото из этого альбома
+			if ( (i=db_query(vstr("SELECT id FROM photos WHERE album='%d'",albid)))<0 )
 			{
 				REQ_FAIL("ALBUM");
 				SENDU(usr,"FAILED ALBUM");
 				return 0;
 			}
-			abil_str2num(uid,dbres[0],p,"ALBUM");
-			if ( uid!=usr->id )
+			for ( j=0; j<i; j++ )
 			{
-				plog(gettext("User cannot delete non-his album %d (uid=%d od %s)\n"),albid,usr->id,"ALBUM");
-				SENDU(usr,"FAILED ALBUM");
-				return 0;
+				if ( (dbres=db_row())==NULL )
+				{
+					REQ_FAIL("ALBUM");
+					SENDU(usr,"FAILED ALBUM");
+					return 0;
+				}
+				if ( unlink(vstr("%s%d/%s.jpg",o_photo_dir,usr->id,dbres[0]))==-1 )
+				{
+					plog(gettext("Failed to delete a file: %s\n"),strerror(errno));
+				}
+				if ( unlink(vstr("%s%d/%s_sm.jpg",o_photo_dir,usr->id,dbres[0]))==-1 )
+				{
+					plog(gettext("Failed to delete a file: %s\n"),strerror(errno));
+				}
 			}
+			
 			if ( db_nr_query(vstr("DELETE FROM photo_albums WHERE id='%d'",albid))!=E_NONE )
 			{
 				REQ_FAIL("ALBUM");
