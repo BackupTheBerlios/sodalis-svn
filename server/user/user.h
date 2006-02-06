@@ -18,7 +18,9 @@
 	флаги datamode
 */
 #define UF_DATA_HERE 1
-#define UF_DATAPHOTOIN 2
+#define UF_DATA_IN 2
+#define UF_DATA_OUT 4
+#define UF_DATAPHOTOIN 8
 
 #include "network/net_id.h"
 
@@ -33,8 +35,8 @@ struct
 	
 	//	datamode
 	unsigned int dataflags;
-	void *data;
-	int data_sz, data_cur;
+	void *indata, *outdata;
+	int indata_sz, indata_cur, outdata_sz, outdata_cur;
 	
 	//	сеть
 	int sock;

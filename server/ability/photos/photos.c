@@ -112,23 +112,23 @@ int abil_photo( usr_record *usr )
 			}
 			
 			//	заполнение данных
-			usr->data_sz=size+strlen(p_arg[1])+strlen(p_arg[2])+2+sizeof(int);
-			usr->data_cur=usr->data_sz-size;
-			usr->data=dmalloc(usr->data_sz);
-			if ( usr->data==NULL )
+			usr->indata_sz=size+strlen(p_arg[1])+strlen(p_arg[2])+2+sizeof(int);
+			usr->indata_cur=usr->indata_sz-size;
+			usr->indata=dmalloc(usr->indata_sz);
+			if ( usr->indata==NULL )
 			{
 				SENDU(usr,"FAILED PHOTO");
 				return 0;
 			}
-			*(int*)usr->data=album;
-			strcpy(usr->data+sizeof(int),p_arg[1]);
-			strcpy(usr->data+sizeof(int)+strlen(p_arg[1])+1,p_arg[2]);
+			*(int*)usr->indata=album;
+			strcpy(usr->indata+sizeof(int),p_arg[1]);
+			strcpy(usr->indata+sizeof(int)+strlen(p_arg[1])+1,p_arg[2]);
 			if ( usr_write(usr,"PHALLOW")!=E_NONE )
 			{
-				dfree(usr->data);
+				dfree(usr->indata);
 				return 1;
 			}
-			usr->dataflags|=UF_DATAPHOTOIN;
+			usr->dataflags|=UF_DATAPHOTOIN|UF_DATA_IN;
 			
 			break;
 			
@@ -161,8 +161,8 @@ int abil_photo_data( usr_record *usr )
 	usr->dataflags&=~UF_DATAPHOTOIN;
 	
 	//	получение данных
-	album=*(int*)(usr->data);
-	name=usr->data+sizeof(int);
+	album=*(int*)(usr->indata);
+	name=usr->indata+sizeof(int);
 	for ( about=name; *about; about++ );
 	about++;
 	for ( data=about; *(char*)data; data++ );
@@ -179,7 +179,7 @@ int abil_photo_data( usr_record *usr )
 		if ( mkdir(photodir,-1)==-1 )
 		{
 			plog(gettext("Failed to create a directory: %s\n"),strerror(errno));
-			dfree(usr->data);
+			dfree(usr->indata);
 			SENDU(usr,"FAILED PHOTO");
 			return 0;
 		}
@@ -191,20 +191,20 @@ int abil_photo_data( usr_record *usr )
 	{
 		plog(gettext("Failed to open a file '%stemp.photo` for writing: %s\n"), \
 				photodir,strerror(errno));
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
 	
 	i=0;
-	while ( i<usr->data_sz-(data-usr->data) )
+	while ( i<usr->indata_sz-(data-usr->indata) )
 	{
 		int t;
-		t=write(fd,data+i,usr->data_sz-(data-usr->data)-i);
+		t=write(fd,data+i,usr->indata_sz-(data-usr->indata)-i);
 		if ( t<=0 )
 		{
 			plog(gettext("Cannot write to file '%stemp.photo`: %s\n"),photodir,strerror(errno));
-			dfree(usr->data);
+			dfree(usr->indata);
 			SENDU(usr,"FAILED PHOTO");
 			return 0;
 		}
@@ -229,7 +229,7 @@ int abil_photo_data( usr_record *usr )
 		plog(gettext("Failed to create an image info structure\n"));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -241,7 +241,7 @@ int abil_photo_data( usr_record *usr )
 				exception.error_number,GetLocaleExceptionMessage(exception.severity,exception.reason));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -250,7 +250,7 @@ int abil_photo_data( usr_record *usr )
 		plog(gettext("Image was not loaded\n"));
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -274,7 +274,7 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -284,7 +284,7 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -301,7 +301,7 @@ int abil_photo_data( usr_record *usr )
 		DestroyImage(image_thumb);
 		DestroyExceptionInfo(&exception);
 		DestroyMagick();
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -322,7 +322,7 @@ int abil_photo_data( usr_record *usr )
 			usr->id,album,name,about,imw,imh))!=E_NONE )
 	{
 		REQ_FAIL("PHOTO");
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -336,7 +336,7 @@ int abil_photo_data( usr_record *usr )
 	{
 		plog(gettext("Failed to rename photo files: %s\n"),strerror(errno));
 		db_nr_query(vstr("DELETE FROM photos WHERE id='%d'",photo_id));
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
@@ -344,12 +344,12 @@ int abil_photo_data( usr_record *usr )
 	if ( db_nr_query(vstr("UPDATE photo_albums SET photos=photos+1 WHERE id='%d'",album))!=E_NONE )
 	{
 		REQ_FAIL("PHOTO");
-		dfree(usr->data);
+		dfree(usr->indata);
 		SENDU(usr,"FAILED PHOTO");
 		return 0;
 	}
 	
-	dfree(usr->data);
+	dfree(usr->indata);
 	SENDU(usr,"PHOK");
 	
 	pstop();

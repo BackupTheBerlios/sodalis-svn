@@ -26,8 +26,9 @@ int parse_msg( usr_record *usr )
 	pstart();
 	
 	//	двоичные данные
-	if ( usr->dataflags )
+	if ( (usr->dataflags&UF_DATA_IN)==UF_DATA_IN )
 	{
+		usr->dataflags&=~UF_DATA_IN;
 		if ( (usr->dataflags&UF_DATAPHOTOIN)==UF_DATAPHOTOIN )
 		{
 			return abil_photo_data(usr);

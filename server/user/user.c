@@ -67,10 +67,6 @@ ecode_t usr_halt( void )
 			plog(gettext("Failed to get next element of the list (kucode=%d)\n"),kucode);
 			ecode=E_KU2;
 		}
-		if ( ((usr_record*)id->data)->dataflags!=0 )
-		{
-			dfree(((usr_record*)id->data)->data);
-		}
 		usr_rem((usr_record*)id->data);
 	}
 	
@@ -133,6 +129,13 @@ ecode_t usr_rem( usr_record *usr )
 	{
 		db_nr_query(vstr("UPDATE logins SET online=0 WHERE id=%d",usr->id));
 		abtree_rem_usr(utree,usr);
+		if ( usr->dataflags!=0 )
+		{
+			if ( (usr->dataflags&UF_DATA_IN)==UF_DATA_IN )
+				dfree(usr->indata);
+			if ( (usr->dataflags&UF_DATA_OUT)==UF_DATA_OUT )
+				dfree(usr->outdata);
+		}
 	}
 	usr->netid->data=NULL;
 	dfree(usr);
@@ -198,9 +201,13 @@ ecode_t usr_auth( usr_record *usr )
 		return E_AUTH;
 	}
 	
-	usr->data=NULL;
-	usr->data_sz=0;
-	usr->data_cur=0;
+	usr->indata=NULL;
+	usr->indata_sz=0;
+	usr->indata_cur=0;
+	
+	usr->outdata=NULL;
+	usr->outdata_sz=0;
+	usr->outdata_cur=0;
 	
 	if ( (kucode=abtree_ins_usr(utree,usr))!=KE_NONE )
 	{
@@ -286,10 +293,10 @@ ecode_t usr_read( usr_record *usr )
 	int rcnt;
 	pstart();
 	
-	if ( usr->dataflags )
+	if ( (usr->dataflags&UF_DATA_IN)==UF_DATA_IN )
 	{
 		//	чтение бинарных данных
-		rcnt=read(usr->sock,usr->data+usr->data_cur,usr->data_sz-usr->data_cur);
+		rcnt=read(usr->sock,usr->indata+usr->indata_cur,usr->indata_sz-usr->indata_cur);
 		if ( (rcnt==-1) && (errno!=EAGAIN) )
 		{
 			plog(gettext("Reading failed (fd=%d): %s\n"),usr->sock,strerror(errno));
@@ -301,9 +308,9 @@ ecode_t usr_read( usr_record *usr )
 		}	else
 		if ( rcnt>0 )
 		{
-			usr->data_cur+=rcnt;
+			usr->indata_cur+=rcnt;
 		}
-		if ( usr->data_cur==usr->data_sz )
+		if ( usr->indata_cur==usr->indata_sz )
 		{
 			usr->dataflags|=UF_DATA_HERE;
 		}
@@ -351,14 +358,12 @@ ecode_t usr_getmsg( usr_record *usr )
 	char *cur;
 	pstart();
 	
-	if ( usr->dataflags )
+	if ( (usr->dataflags&UF_DATA_IN)==UF_DATA_IN )
 	{
 		pstop();
 		if ( (usr->dataflags&UF_DATA_HERE)==UF_DATA_HERE )
 		{
-			pdebug("fl: %d\n",usr->dataflags);
 			usr->dataflags&=~UF_DATA_HERE;
-			pdebug("fl: %d\n",usr->dataflags);
 			return E_AGAIN;
 		}	else
 		{
@@ -399,65 +404,132 @@ ecode_t usr_write( usr_record *usr, char *msg )
 	int scnt;
 	pstart();
 	
-	#ifdef LOG_NET
-	plog("*** SENDING (fd=%d, uid=%d, size=%d) *** \"%s\"\n",usr->sock,usr->id,strlen(msg),msg);
-	#endif
-	
-	if ( usr->outstart!=usr->outpos )
+	if ( (usr->dataflags&UF_DATA_OUT)==UF_DATA_OUT )
 	{
-		//	в бефере чтото есть
-		if ( (ecode=usr_writel(usr))!=E_NONE )
-			return ecode;
-	}
-	
-	if ( usr->outstart==usr->outpos )
-	{
-		scnt=write(usr->sock,msg,strlen(msg)+1);
-		if ( (scnt==-1) && (errno!=EAGAIN) )
+		if ( msg==NULL )
 		{
-			plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
-			return E_FILE;
+			//	отправление бинарного сообщения
+			scnt=write(usr->sock,usr->outdata+usr->outdata_cur,usr->outdata_sz-usr->outdata_cur);
+			if ( (scnt==-1) && (errno!=EAGAIN) )
+			{
+				plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+				return E_FILE;
+			}	else
+			if ( scnt==0 )
+			{
+				return E_DISCONNECT;
+			}
+			if ( scnt!=-1 )
+				usr->outdata_cur+=scnt;
+			if ( usr->outdata_cur==usr->outdata_sz )
+			{
+				//	отослоно всё сообщение
+				usr->dataflags&=~UF_DATA_OUT;
+				dfree(usr->outdata);
+			}	else
+			{
+				//	тоько часть
+				if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
+				{
+					plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
+					return E_KU2;
+				}
+			}
 		}	else
-		if ( scnt==0 )
 		{
-			return E_DISCONNECT;
-		}
-	}	else
-		scnt=0;
-	
-	if ( scnt<strlen(msg)+1 )
-	{
-		//	отослалось не всё
-		msg+=scnt;
-		if ( usr->outpos+BUFFER_MINIMUM_FREE>=BUFFER_SIZE_USER )
-		{
-			//	буффер полный, сдвигаем
-			if ( usr->outstart==0 )
+			//	отправление текстового сообщения, когда бинарное
+			//	ещё не было отправлено
+			if ( usr->outpos+BUFFER_MINIMUM_FREE>=BUFFER_SIZE_USER )
+			{
+				//	буффер полный, сдвигаем
+				if ( usr->outstart==0 )
+				{
+					//	нет места, ошибка
+					plog(gettext("Writing buffer is full, cannot write any more (fd=%d)\n"),usr->sock);
+					return E_OBUFFER;
+				}	else
+				{
+					memmove(usr->out,usr->out+usr->outstart,usr->outpos-usr->outstart);
+					usr->outpos-=usr->outstart;
+					usr->outstart=0;
+				}
+			}
+			if ( strlen(msg)+1>BUFFER_SIZE_USER-usr->outpos )
 			{
 				//	нет места, ошибка
 				plog(gettext("Writing buffer is full, cannot write any more (fd=%d)\n"),usr->sock);
 				return E_OBUFFER;
-			}	else
-			{
-				memmove(usr->out,usr->out+usr->outstart,usr->outpos-usr->outstart);
-				usr->outpos-=usr->outstart;
-				usr->outstart=0;
 			}
-		}
-		if ( strlen(msg)+1>BUFFER_SIZE_USER-usr->outpos )
-		{
-			//	нет места, ошибка
-			plog(gettext("Writing buffer is full, cannot write any more (fd=%d)\n"),usr->sock);
-			return E_OBUFFER;
-		}
-		memcpy(usr->out+usr->outpos,msg,strlen(msg)+1);
-		usr->outpos+=strlen(msg)+1;
-		if ( scnt!=0 )
-		{
+			memcpy(usr->out+usr->outpos,msg,strlen(msg)+1);
+			usr->outpos+=strlen(msg)+1;
 			if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
 			{
 				plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
 				return E_KU2;
+			}
+		}
+	}	else
+	{
+		#ifdef LOG_NET
+		plog("*** SENDING (fd=%d, uid=%d, size=%d) *** \"%s\"\n",usr->sock,usr->id,strlen(msg),msg);
+		#endif
+		
+		if ( usr->outstart!=usr->outpos )
+		{
+			//	в бефере чтото есть
+			if ( (ecode=usr_writel(usr))!=E_NONE )
+				return ecode;
+		}
+		
+		if ( usr->outstart==usr->outpos )
+		{
+			scnt=write(usr->sock,msg,strlen(msg)+1);
+			if ( (scnt==-1) && (errno!=EAGAIN) )
+			{
+				plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+				return E_FILE;
+			}	else
+			if ( scnt==0 )
+			{
+				return E_DISCONNECT;
+			}
+		}	else
+			scnt=0;
+		
+		if ( scnt<strlen(msg)+1 )
+		{
+			//	отослалось не всё
+			msg+=scnt;
+			if ( usr->outpos+BUFFER_MINIMUM_FREE>=BUFFER_SIZE_USER )
+			{
+				//	буффер полный, сдвигаем
+				if ( usr->outstart==0 )
+				{
+					//	нет места, ошибка
+					plog(gettext("Writing buffer is full, cannot write any more (fd=%d)\n"),usr->sock);
+					return E_OBUFFER;
+				}	else
+				{
+					memmove(usr->out,usr->out+usr->outstart,usr->outpos-usr->outstart);
+					usr->outpos-=usr->outstart;
+					usr->outstart=0;
+				}
+			}
+			if ( strlen(msg)+1>BUFFER_SIZE_USER-usr->outpos )
+			{
+				//	нет места, ошибка
+				plog(gettext("Writing buffer is full, cannot write any more (fd=%d)\n"),usr->sock);
+				return E_OBUFFER;
+			}
+			memcpy(usr->out+usr->outpos,msg,strlen(msg)+1);
+			usr->outpos+=strlen(msg)+1;
+			if ( scnt!=0 )
+			{
+				if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
+				{
+					plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
+					return E_KU2;
+				}
 			}
 		}
 	}
@@ -471,26 +543,58 @@ ecode_t usr_writel( usr_record *usr )
 	int scnt;
 	pstart();
 	
-	scnt=write(usr->sock,usr->out+usr->outstart,usr->outpos-usr->outstart);
-	if ( (scnt==-1) && (errno!=EAGAIN) )
+	if ( (usr->dataflags&UF_DATA_OUT)==UF_DATA_OUT )
 	{
-		plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
-		return E_FILE;
-	}	else
-	if ( scnt==0 )
-	{
-		return E_DISCONNECT;
-	}	else
-	{
-		if ( scnt!=-1 )
-			usr->outstart+=scnt;
-		if ( usr->outstart!=usr->outpos )
+		scnt=write(usr->sock,usr->outdata+usr->outdata_cur,usr->outdata_sz-usr->outdata_cur);
+		if ( (scnt==-1) && (errno!=EAGAIN) )
 		{
+			plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+			return E_FILE;
+		}	else
+		if ( scnt==0 )
+		{
+			return E_DISCONNECT;
+		}	else
+		{
+			if ( scnt!=-1 )
+				usr->outdata_cur+=scnt;
 			//	записалось не всё, повторить
-			if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
+			if ( usr->outdata_cur==usr->outdata_sz )
 			{
-				plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
-				return E_KU2;
+				usr->dataflags&=~UF_DATA_OUT;
+				dfree(usr->outdata);
+			}	else
+			{
+				if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
+				{
+					plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
+					return E_KU2;
+				}
+			}
+		}
+	}	else
+	{
+		scnt=write(usr->sock,usr->out+usr->outstart,usr->outpos-usr->outstart);
+		if ( (scnt==-1) && (errno!=EAGAIN) )
+		{
+			plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
+			return E_FILE;
+		}	else
+		if ( scnt==0 )
+		{
+			return E_DISCONNECT;
+		}	else
+		{
+			if ( scnt!=-1 )
+				usr->outstart+=scnt;
+			if ( usr->outstart!=usr->outpos )
+			{
+				//	записалось не всё, повторить
+				if ( (kucode=kulist_ins_net(sock_wlist,usr->netid))!=KE_NONE )
+				{
+					plog(gettext("Failed to insert an element into the list (kucode=%d)\n"),kucode);
+					return E_KU2;
+				}
 			}
 		}
 	}
