@@ -408,8 +408,10 @@ ecode_t usr_write( usr_record *usr, char *msg )
 	{
 		if ( msg==NULL )
 		{
+			_
 			//	отправление бинарного сообщения
 			scnt=write(usr->sock,usr->outdata+usr->outdata_cur,usr->outdata_sz-usr->outdata_cur);
+			pdebug("%d\n",scnt);
 			if ( (scnt==-1) && (errno!=EAGAIN) )
 			{
 				plog(gettext("Writing failed (fd=%d): %s\n"),usr->sock,strerror(errno));
@@ -421,8 +423,10 @@ ecode_t usr_write( usr_record *usr, char *msg )
 			}
 			if ( scnt!=-1 )
 				usr->outdata_cur+=scnt;
+			_
 			if ( usr->outdata_cur==usr->outdata_sz )
 			{
+				_
 				//	отослоно всё сообщение
 				usr->dataflags&=~UF_DATA_OUT;
 				dfree(usr->outdata);

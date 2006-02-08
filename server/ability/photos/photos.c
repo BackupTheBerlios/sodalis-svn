@@ -24,6 +24,10 @@ int abil_photo( usr_record *usr )
 {
 	int size, album, tid, photos, maxph;
 	char *p, **dbres;
+	
+	int f,i,t;
+	struct stat st;
+	
 	pstart();
 	
 	switch ( p_argc )
@@ -67,6 +71,79 @@ int abil_photo( usr_record *usr )
 			break;
 			
 		case 3:	// запрос
+			abil_num(tid,1,p,"PHOTO");
+			
+			if ( db_query(vstr("SELECT owner FROM photos WHERE id='%d'",tid))!=1 )
+			{
+				REQ_FAIL("PHOTO");
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			if ( (dbres=db_row())==NULL )
+			{
+				REQ_FAIL("PHOTO");
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			
+			if ( !strcmp(p_arg[2],"S") )
+			{
+				p=vstr("%s%s/%d_sm.jpg",o_photo_dir,dbres[0],tid);
+			}	else
+			if ( !strcmp(p_arg[2],"L") )
+			{
+				p=vstr("%s%s/%d.jpg",o_photo_dir,dbres[0],tid);
+			}	else
+			{
+				plog(gettext("Invalid photo type (uid=%d)\n"),usr->id);
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			
+			//	чтение файла
+			f=open(p,O_RDONLY);
+			if ( f==-1 )
+			{
+				plog(gettext("Failed to open a file: %s\n"),strerror(errno));
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			if ( stat(p,&st)==-1 )
+			{
+				plog(gettext("Failed to get stats of the file: %s\n"),strerror(errno));
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			usr->outdata=dmalloc(st.st_size);
+			if ( usr->outdata==NULL )
+			{
+				plog(errtext(E_MEMORY));
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			i=0;
+			while ( i<st.st_size )
+			{
+				t=read(f,usr->outdata,st.st_size-i);
+				if ( i==-1 )
+				{
+					plog(gettext("Failed to read from file: %s\n"),strerror(errno));
+					dfree(usr->outdata);
+					SENDU(usr,"FAILED PHOTO");
+					return 0;
+				}
+				i+=t;
+			}
+			usr->dataflags|=UF_DATA_OUT;
+			usr->outdata_cur=0;
+			usr->outdata_sz=st.st_size;
+			pdebug("%d\n",usr->outdata_sz);
+			if ( usr_write(usr,NULL)!=E_NONE )
+			{
+				dfree(usr->outdata);
+				usr->dataflags&=~UF_DATA_OUT;
+				return 1;
+			}
 			
 			break;
 			
