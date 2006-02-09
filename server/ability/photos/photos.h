@@ -24,4 +24,10 @@ int abil_chmph( usr_record *usr );
 //	Протокол 5.4.4
 int abil_album( usr_record *usr );
 
+//	Протокол 4.5
+int abil_lsph( usr_record *usr );
+
+//	Протокол 4.6
+int abil_lspa( usr_record *usr );
+
 #endif

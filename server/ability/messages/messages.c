@@ -319,7 +319,7 @@ int abil_lsm( usr_record *usr )
 		{
 			lsm_p.type=lsm_SENT;
 		}	else
-		if ( !strcmp(p_arg[i],"FOR") && (lsm_p.tfor==-1) )
+		if ( !strcmp(p_arg[i],"FOR") && (lsm_p.tfor==-1) && (i+1<p_argc) )
 		{
 			i++;
 			abil_num(tmp,i,p,"LSM");
@@ -331,7 +331,7 @@ int abil_lsm( usr_record *usr )
 			}
 			lsm_p.tfor=tmp;
 		}	else
-		if ( !strcmp(p_arg[i],"AFTER") && (lsm_p.after==-1) )
+		if ( !strcmp(p_arg[i],"AFTER") && (lsm_p.after==-1) && (i+1<p_argc) )
 		{
 			i++;
 			abil_num(tmp,i,p,"LSM");
@@ -343,7 +343,7 @@ int abil_lsm( usr_record *usr )
 			}
 			lsm_p.after=tmp;
 		}	else
-		if ( !strcmp(p_arg[i],"BEFORE") && (lsm_p.before==-1) )
+		if ( !strcmp(p_arg[i],"BEFORE") && (lsm_p.before==-1) && (i+1<p_argc) )
 		{
 			i++;
 			abil_num(tmp,i,p,"LSM");

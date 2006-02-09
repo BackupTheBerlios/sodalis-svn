@@ -118,6 +118,14 @@ int parse_msg( usr_record *usr )
 	{
 		if ( abil_album(usr) ) return 1;
 	}	else
+	if ( !strcmp(p_arg[0],"LSPH") )
+	{
+		if ( abil_lsph(usr) ) return 1;
+	}	else
+	if ( !strcmp(p_arg[0],"LSPA") )
+	{
+		if ( abil_lspa(usr) ) return 1;
+	}	else
 	
 	//	админисрирование
 	if ( !strcmp(p_arg[0],"STOP") )

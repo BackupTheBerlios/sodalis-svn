@@ -73,7 +73,7 @@ int abil_photo( usr_record *usr )
 		case 3:	// запрос
 			abil_num(tid,1,p,"PHOTO");
 			
-			if ( db_query(vstr("SELECT owner FROM photos WHERE id='%d'",tid))!=1 )
+			if ( db_query(vstr("SELECT owner, caption, about, album FROM photos WHERE id='%d'",tid))!=1 )
 			{
 				REQ_FAIL("PHOTO");
 				SENDU(usr,"FAILED PHOTO");
@@ -100,17 +100,20 @@ int abil_photo( usr_record *usr )
 				return 0;
 			}
 			
+			//	отправление заголовка
+			if ( stat(p,&st)==-1 )
+			{
+				plog(gettext("Failed to get stats of the file: %s\n"),strerror(errno));
+				SENDU(usr,"FAILED PHOTO");
+				return 0;
+			}
+			SENDU(usr,vstr("PHOTO \"%s\" \"%s\" %s %d",dbres[1],dbres[2],dbres[3],st.st_size));
+			
 			//	чтение файла
 			f=open(p,O_RDONLY);
 			if ( f==-1 )
 			{
 				plog(gettext("Failed to open a file: %s\n"),strerror(errno));
-				SENDU(usr,"FAILED PHOTO");
-				return 0;
-			}
-			if ( stat(p,&st)==-1 )
-			{
-				plog(gettext("Failed to get stats of the file: %s\n"),strerror(errno));
 				SENDU(usr,"FAILED PHOTO");
 				return 0;
 			}
@@ -612,11 +615,103 @@ int abil_album( usr_record *usr )
 			break;
 			
 		default:
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"ALBUM");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"ALBUM");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
 	
+	pstop();
+	return 0;
+}
+
+int abil_lsph( usr_record *usr )
+{
+	struct
+	{
+		int album;
+		int uid;
+	}	lsph={-1, -1};
+	int i, tmp;
+	char *p, *query, **dbres;
+	pstart();
+	
+	//	сбор параметров
+	for ( i=1; i<p_argc; i++ )
+	{
+		if ( !strcmp(p_arg[i],"MAIN") && (lsph.album==-1) )
+		{
+			lsph.album=-2;
+		}	else
+		if ( !strcmp(p_arg[i],"OF") && (lsph.uid==-1) && (i+1<p_argc) )
+		{
+			i++;
+			abil_num(tmp,i,p,"LSPH");
+			if ( tmp<0 )
+			{
+				plog(gettext("Invalid ID (uid=%d on %s)\n"),usr->id,"LSPH");
+				usr_write(usr,"DISCON CMD");
+				return 1;
+			}
+			lsph.uid=tmp;
+		}	else
+		if ( !strcmp(p_arg[i],"FROM") && (lsph.album==-1) && (i+1<p_argc) )
+		{
+			i++;
+			abil_num(tmp,i,p,"LSPH");
+			if ( tmp<0 )
+			{
+				plog(gettext("Invalid ID (uid=%d on %s)\n"),usr->id,"LSPH");
+				usr_write(usr,"DISCON CMD");
+				return 1;
+			}
+			lsph.album=tmp;
+		}	else
+		{
+			plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSPH");
+			usr_write(usr,"DISCON CMD");
+			return 1;
+		}
+	}
+	
+	//	составление запроса
+	if ( lsph.album==-2 )
+	{
+		//	main photo
+		query=vstr("SELECT ph.id, ph.owner, ph.caption, ph.about, ph.album FROM photos ph, logins log " \
+				"WHERE log.id='%d' AND ph.id=log.main_photo",lsph.uid==-1?usr->id:lsph.uid);
+	}	else
+	{
+		query=vstr("SELECT id, owner, caption, about, album FROM photos " \
+				"WHERE owner='%d'",lsph.uid==-1?usr->id:lsph.uid);;
+		if ( lsph.album!=-1 )
+		{
+			query=vstr("%s AND album='%d",query,lsph.album);
+		}
+	}
+	
+	//	выполнение запроса
+	if ( (tmp=db_query(query))<0 )
+	{
+		REQ_FAIL("LSPH");
+		return 0;
+	}
+	for ( i=0; i<tmp; i++ )
+	{
+		if ( (dbres=db_row())==NULL )
+		{
+			REQ_FAIL("LSPH");
+			return 0;
+		}
+		SENDU(usr,vstr("PHOTO %s %s \"%s\" \"%s\" %s",dbres[0],dbres[1],dbres[2],dbres[3],dbres[4]));
+	}
+	
+	pstop();
+	return 0;
+}
+
+int abil_lspa( usr_record *usr )
+{
+	pstart();
 	pstop();
 	return 0;
 }

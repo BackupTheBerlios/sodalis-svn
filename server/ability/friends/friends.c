@@ -419,7 +419,7 @@ int abil_lsf( usr_record *usr )
 		{
 			lsf_p.online=lsf_OFF;
 		}	else
-		if ( !strcmp(p_arg[i],"GRP") && (lsf_p.usgr==lsf_NONE_ug) )
+		if ( !strcmp(p_arg[i],"GRP") && (lsf_p.usgr==lsf_NONE_ug) && (i+1<p_argc) )
 		{
 			i++;
 			abil_num(tmp,i,p,"LSF");
@@ -432,7 +432,7 @@ int abil_lsf( usr_record *usr )
 			lsf_p.ugid=tmp;
 			lsf_p.usgr=lsf_GRP;
 		}	else
-		if ( !strcmp(p_arg[i],"OF") && (lsf_p.usgr==lsf_NONE_ug) )
+		if ( !strcmp(p_arg[i],"OF") && (lsf_p.usgr==lsf_NONE_ug) && (i+1<p_argc) )
 		{
 			i++;
 			abil_num(tmp,i,p,"LSF");
