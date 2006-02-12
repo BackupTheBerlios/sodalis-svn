@@ -711,7 +711,63 @@ int abil_lsph( usr_record *usr )
 
 int abil_lspa( usr_record *usr )
 {
+	int of=-1;
+	char *p, **dbres;
+	int tmp, i;
 	pstart();
+	
+	//	проверка параметров
+	if ( p_argc==3 )
+	{
+		if ( !strcmp(p_arg[1],"OF") )
+		{
+			abil_num(of,2,p,"LSPA");
+		}
+	}
+	if ( (p_argc!=1) && (of==-1) )
+	{
+		plog(gettext("Invalid incoming parameter (uid=%d on %s)\n"),usr->id,"LSPA");
+		usr_write(usr,"DISCON CMD");
+		return 1;
+	}
+	
+	//	выполнение запроса
+	if ( of==-1 )
+	{
+		if ( (tmp=db_query(vstr("SELECT id, caption, about, photos, maxphotos FROM photo_albums " \
+				"WHERE owner='%d'",usr->id)))<0 )
+		{
+			REQ_FAIL("LSPA");
+			return 0;
+		}
+		for ( i=0; i<tmp; i++ )
+		{
+			if ( (dbres=db_row())==NULL )
+			{
+				REQ_FAIL("LSPA");
+				return 0;
+			}
+			SENDU(usr,vstr("ALBUM %s \"%s\" \"%s\" %s %s",dbres[0],dbres[1],dbres[2],dbres[3],dbres[4]));
+		}
+	}	else
+	{
+		if ( (tmp=db_query(vstr("SELECT id, caption, about FROM photo_albums " \
+				"WHERE owner='%d'",of)))<0 )
+		{
+			REQ_FAIL("LSPA");
+			return 0;
+		}
+		for ( i=0; i<tmp; i++ )
+		{
+			if ( (dbres=db_row())==NULL )
+			{
+				REQ_FAIL("LSPA");
+				return 0;
+			}
+			SENDU(usr,vstr("ALBUM %s \"%s\" \"%s\"",dbres[0],dbres[1],dbres[2]));
+		}
+	}
+	
 	pstop();
 	return 0;
 }
