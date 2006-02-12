@@ -21,6 +21,7 @@
 #define CFG_SQLHOST "localhost"
 #define CFG_SQLNAME "sodalis"
 #define CFG_SQLPSWD ""
+#define CFG_SQLDBASE "sodalis"
 
 #define CFG_STOPLEV 1000
 #define CFG_BREAKLEV 2

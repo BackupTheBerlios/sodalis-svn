@@ -27,7 +27,7 @@ dst=strtol(p_arg[n],&p,10); \
 if ( *p!=0 ) \
 { \
 	usr_write(usr,"DISCON CMD"); \
-	plog(gettext("Invalid %d parametre (uid=%d on %s)\n"),n,usr->id,abil_id); \
+	plog(gettext("Invalid %d parameter (uid=%d on %s)\n"),n,usr->id,abil_id); \
 	return 1; \
 }
 
@@ -49,7 +49,7 @@ if ( usr_write(usr,msg)!=E_NONE ) return 1
 if ( p_argc!=c ) \
 { \
 	usr_write(usr,"DISCON CMD"); \
-	plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,abil_id); \
+	plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,abil_id); \
 	return 1; \
 }
 

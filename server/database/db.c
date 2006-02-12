@@ -23,7 +23,7 @@ ecode_t db_init( void )
 	pstart();
 	
 	mysql_init(&sql);
-	if ( mysql_real_connect(&sql,o_sqlhost,o_sqlname,o_sqlpswd,"sodalis",0,NULL,0)==NULL )
+	if ( mysql_real_connect(&sql,o_sqlhost,o_sqlname,o_sqlpswd,o_sqldbase,0,NULL,0)==NULL )
 	{
 		plog(gettext("Failed to connect to SQL dataserver: %s\n"),mysql_error(&sql));
 		return E_SQL_CONNECT;

@@ -19,17 +19,17 @@ extern FILE *logstream;
 	1.	Открытие файла лога
 	2.	file - имя файла
 	3.	Код ошибки
-	4.	E_NONE - нет ошибки
-		E_FILE - не удалось открыть файл
+	4.	KE_NONE - нет ошибки
+		KE_IO - не удалось открыть файл
 */
-kucode_t openlog( char *file );;
+kucode_t openlog( char *file );
 
 /*
 	1.	Закрытие файла лога
 	2.	---
 	3.	Код ошибки
-	4.	E_NONE - нет ошибки
-		E_FILE - не удалось закрыть файл
+	4.	KE_NONE - нет ошибки
+		KE_IO - не удалось закрыть файл
 */
 kucode_t closelog( void );
 

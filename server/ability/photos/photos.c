@@ -213,7 +213,7 @@ int abil_photo( usr_record *usr )
 			break;
 			
 		default:
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"PHOTO");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"PHOTO");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
@@ -667,7 +667,7 @@ int abil_lsph( usr_record *usr )
 			lsph.album=tmp;
 		}	else
 		{
-			plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSPH");
+			plog(gettext("Invalid incoming parameter (uid=%d on %s)\n"),usr->id,"LSPH");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 		}

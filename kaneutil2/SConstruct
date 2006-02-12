@@ -13,6 +13,7 @@ sources = Split("""
 	cfgreader/tree_cfg.c
 	log/log.c
 	other/other.c
+	dialogue/dialogue.c
 	""")
 
 Default(env.Library("ku2", sources))

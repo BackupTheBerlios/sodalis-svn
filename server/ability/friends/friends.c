@@ -117,7 +117,7 @@ int abil_invite( usr_record *usr )
 			break;
 		
 		default:
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"INVITE");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"INVITE");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
@@ -375,7 +375,7 @@ int abil_group( usr_record *usr )
 			break;
 			
 		default:
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"GROUP");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"GROUP");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
@@ -452,7 +452,7 @@ int abil_lsf( usr_record *usr )
 			lsf_p.usgr=lsf_OF;
 		}	else
 		{
-			plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSF");
+			plog(gettext("Invalid incoming parameter (uid=%d on %s)\n"),usr->id,"LSF");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 		}
@@ -622,7 +622,7 @@ int abil_lsinv( usr_record *usr )
 						"WHERE who_invited='%d'",usr->id);
 			}	else
 			{
-				plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSF");
+				plog(gettext("Invalid incoming parameter (uid=%d on %s)\n"),usr->id,"LSF");
 				usr_write(usr,"DISCON CMD");
 				return 1;
 			}
@@ -630,7 +630,7 @@ int abil_lsinv( usr_record *usr )
 			break;
 			
 		default:
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"LSINV");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"LSINV");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}

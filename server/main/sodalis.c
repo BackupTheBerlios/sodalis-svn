@@ -16,6 +16,7 @@
 
 #include "main/config.h"
 #include "main/ecode.h"
+#include "main/tools.h"
 #include "errors/debug.h"
 #include "log/log.h"
 #include "network/net.h"
@@ -52,6 +53,7 @@ char o_logfile[CFG_BUFFER]=CFG_LOGFILE;
 char o_sqlhost[CFG_BUFFER]=CFG_SQLHOST;
 char o_sqlname[CFG_BUFFER]=CFG_SQLNAME;
 char o_sqlpswd[CFG_BUFFER]=CFG_SQLPSWD;
+char o_sqldbase[CFG_BUFFER]=CFG_SQLDBASE;
 int o_stoplev=CFG_STOPLEV;
 int o_breaklev=CFG_BREAKLEV;
 int o_defmsgtype=CFG_DEFMSGTYPE;
@@ -197,10 +199,11 @@ int main( int argc, char *argv[] )
 		//	помощь
 		if ( strcmp(argv[i],"--help")==0 )
 		{
-			printf(gettext("Usage: %s [parametre]\nParametres:\n"),argv[0]);
+			printf(gettext("Usage: %s [parameter]\nParameters:\n"),argv[0]);
 			printf(gettext("\t'--help`: show out this help;\n"));
 			printf(gettext("\t'--about`: show the information about the server;\n"));
 			printf(gettext("\t'-c file`: use this file istead of '"CFG_FILE"`;\n"));
+			printf(gettext("\t'--blankdb`: blank the existing MySQL database;\n"));
 			return EXIT_SUCCESS;
 		}	else
 		//	информация о программе
@@ -212,9 +215,14 @@ int main( int argc, char *argv[] )
 				"Build on: %s %s\n"),__DATE__,__TIME__);
 			return EXIT_SUCCESS;
 		}	else
+		//	очистить базу данных
+		if ( strcmp(argv[i],"--blankdb")==0 )
+		{
+			toolkey|=TOOL_BLANKDB;
+		}	else
 		//	неверный ключ
 		{
-			printf(gettext("Invalid parametre '%s`, see '%s help`\n"),argv[i],argv[0]);
+			printf(gettext("Invalid parameter '%s`, see '%s --help`\n"),argv[i],argv[0]);
 			return EXIT_FAILURE;
 		}
 	}
@@ -237,6 +245,7 @@ int main( int argc, char *argv[] )
 			(cfg_query("mysql_host","s",o_sqlhost)!=KE_NONE) || \
 			(cfg_query("mysql_name","s",o_sqlname)!=KE_NONE) || \
 			(cfg_query("mysql_pswd","s",o_sqlpswd)!=KE_NONE) || \
+			(cfg_query("mysql_dbase","s",o_sqldbase)!=KE_NONE) || \
 			(cfg_query("save_msg","b",&o_defmsgtype)!=KE_NONE) || \
 			(cfg_query("lev_stop","i",&o_stoplev)!=KE_NONE) || \
 			(cfg_query("lev_break","i",&o_breaklev)!=KE_NONE) || \
@@ -264,12 +273,22 @@ int main( int argc, char *argv[] )
 	}
 	
 	//	обработка полученных данных
+	if ( toolkey!=0 )
+	{
+		if ( (toolkey&TOOL_BLANKDB)==TOOL_BLANKDB )
+			if ( (ecode=tool_blankdb())!=E_NONE )
+			{
+				plog("%s\n",errtext(ecode));
+				return EXIT_FAILURE;
+			}
+		pstop();
+		return EXIT_SUCCESS;
+	}
 	if ( qdir2(o_photo_dir) )
 	{
 		plog(gettext("Photo directory cannot be opened\n"));
 		return EXIT_FAILURE;
 	}
-	pdebug("%s\n",o_photo_dir);
 	
 	//	открытие файла лога
 	if ( (ecode=openlog(o_logfile))!=E_NONE )

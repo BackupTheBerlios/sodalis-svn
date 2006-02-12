@@ -10,6 +10,13 @@
 #define KU__OTHER_H__
 #include "errors/open_code.h"
 
+//	преобразовать значение макроса в конст. строку
+#define STR( m ) _STR_(m)
+#define _STR_( m ) #m
+
+//	склеить 2 конст. строки
+#define CONCAT( m, n ) m ## n
+
 //	длина строки
 #define QSTR_STRSIZE 2048
 //	количество строк

@@ -124,7 +124,7 @@ int parse( char *msg, int type )
 					*(dst++)=0;
 					if ( i==ARG_CNT )
 					{
-						printf(gettext("Cannot parse: too many parametres\n"));
+						printf(gettext("Cannot parse: too many parameters\n"));
 						return 0;
 					}	else
 					{

@@ -18,14 +18,8 @@
 #define KU__DEBUG_H__
 #include "errors/open_code.h"
 
-#define STR( m ) _STR_(m)
-#define _STR_( m ) #m
-
-#define CONCAT( m, n ) m ## n
-
 #ifdef DEBUG
 
-#include "errors/errors.h"
 void printf_debug( char *file, const char *func, int line, char *fmt, ... );
 void *malloc_debug( int size );
 void free_debug( void *__ptr );

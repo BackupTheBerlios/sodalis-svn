@@ -24,6 +24,7 @@ extern char o_logfile[CFG_BUFFER];
 extern char o_sqlhost[CFG_BUFFER];
 extern char o_sqlname[CFG_BUFFER];
 extern char o_sqlpswd[CFG_BUFFER];
+extern char o_sqldbase[CFG_BUFFER];
 
 //	уровни доступа
 extern int o_stoplev;

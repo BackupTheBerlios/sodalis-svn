@@ -169,7 +169,7 @@ int parse( char *msg )
 					*(dst++)=0;
 					if ( i==PARSER_ARG_CNT )
 					{
-						plog(gettext("Cannot parse: too many parametres\n"));
+						plog(gettext("Cannot parse: too many parameters\n"));
 						return 0;
 					}	else
 					{

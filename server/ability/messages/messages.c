@@ -87,7 +87,7 @@ int abil_msgu( usr_record *usr )
 			break;
 			
 		default:	// неверное кол-во параметров
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"MSGU");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"MSGU");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
@@ -156,7 +156,7 @@ int abil_msgg( usr_record *usr )
 			break;
 			
 		default:	// неверное кол-во параметров
-			plog(gettext("Invalid count of parametres (uid=%d on %s)\n"),usr->id,"MSGG");
+			plog(gettext("Invalid count of parameters (uid=%d on %s)\n"),usr->id,"MSGG");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 	}
@@ -356,7 +356,7 @@ int abil_lsm( usr_record *usr )
 			lsm_p.before=tmp;
 		}	else
 		{
-			plog(gettext("Invalid incoming parametre (uid=%d on %s)\n"),usr->id,"LSM");
+			plog(gettext("Invalid incoming parameter (uid=%d on %s)\n"),usr->id,"LSM");
 			usr_write(usr,"DISCON CMD");
 			return 1;
 		}
