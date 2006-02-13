@@ -13,13 +13,17 @@
 #include "errors/ecode.h"
 #include <stdio.h>
 
+#define DLGUE_STRSIZE 256
+#define DLGUE_USE_GETTEXT
+
 typedef
 enum
 {
-	DLGUE_BOOL,
-	DLGUE_INT,
-	DLGUE_STRING,
-	DLGUE_FLOAT
+	DLGUE_BOOL=1,
+	DLGUE_INT=2,
+	DLGUE_STRING=3,
+	DLGUE_FLOAT=4,
+	DLGUE_CANCEL=8
 }	dlgue_t;
 
 /*
@@ -40,6 +44,14 @@ void dlgue_stream( FILE *in, FILE *out );
 	4.	ntni
 */
 kucode_t dlgue_ask( char *question, void *answer, dlgue_t type );
+
+/*
+	1.	Вывод сообщения на экран
+	2.	text - текст сообщения
+	3.	---
+	4.	---
+*/
+void dlgue_claim( char *text );
 
 #include "errors/close_code.h"
 #endif
