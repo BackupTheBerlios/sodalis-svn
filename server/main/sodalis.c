@@ -143,7 +143,8 @@ void sig_handler( int sig )
 	{
 		plog(gettext("Signal %d recieved, exiting...\n"),sig);
 		doubleerr=1;
-		main_close();
+		if ( server_is_on )
+			main_close();
 	}	else
 	{
 		plog(gettext("Second signal (%d) recieved, exiting, it is bad, very bad!\n"),sig);
@@ -162,7 +163,6 @@ int main( int argc, char *argv[] )
 	*/
 	exec_path=argv[0];
 	logstream=stdout;
-	server_is_on=1;
 	
 	/*
 		установна обработчиков сигналов
@@ -309,7 +309,7 @@ int main( int argc, char *argv[] )
 		closelog();
 	}	else
 	{
-		
+		server_is_on=1;
 		/*	!!!!!
 			основной цикл
 			!!!!!	*/

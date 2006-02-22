@@ -14,6 +14,7 @@
 #include "errors/debug.h"
 #include "database/db.h"
 #include "dialogue/dialogue.h"
+#include "other/other.h"
 
 int toolkey=0;
 
@@ -22,12 +23,13 @@ ecode_t tool_blankdb( void )
 	ecode_t ec;
 	kucode_t kec;
 	int t;
+	char *backuppath=NULL;
 	pstart();
 	
 	dlgue_stream(stdin,stdout);
-	kec=dlgue_ask(gettext("WARNING! You are going to crete a blank database,\n" \
-			"this will drop all the existing tables!\n" \
-			"Would You like to back up the current database\nif it exists?"), \
+	kec=dlgue_ask(gettext("WARNING! You are going to crete a blank database, " \
+			"this will drop all the existing tables! " \
+			"Would You like to back up the current database if it exists?"), \
 			&t,DLGUE_BOOL|DLGUE_CANCEL);
 	
 	if ( kec==KE_EMPTY )
@@ -39,8 +41,110 @@ ecode_t tool_blankdb( void )
 	if ( kec!=KE_NONE )
 		return E_KU2;
 	
+	if ( t )
+	{
+		kec=dlgue_ask(gettext("Please select the direcotry where the back ups are to be stored"), \
+				&backuppath,DLGUE_STRING|DLGUE_CANCEL);
+		if ( kec==KE_EMPTY )
+		{
+			dlgue_claim(gettext("Operation canceled!"));
+			return E_NONE;
+		}
+		if ( kec!=KE_NONE )
+			return E_KU2;
+	}
+	
 	if ( (ec=db_init())!=E_NONE )
 		return ec;
+	
+	if ( backuppath!=NULL )
+	{
+		//	backing up
+		dlgue_claim("DEVELOPMENT VERSION, backing up is not implemented!");
+	}
+	
+	if (
+		(db_nr_query("DROP TABLE IF EXISTS `friends`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE friends ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`whose` int(11) NOT NULL default '0', " \
+			"`who` int(11) NOT NULL default '0', " \
+			"`undergroup` int(11) default '-1', " \
+			"`date` int(11) default '0', " \
+			"`knew` char(1) default '-', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `groups`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `groups` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`owner` int(11) NOT NULL default '0', " \
+			"`caption` char(50) NOT NULL default '', " \
+			"`about` char(255) NOT NULL default '', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `invites`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `invites` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`whose` int(11) NOT NULL default '0', " \
+			"`who_invited` int(11) NOT NULL default '0', " \
+			"`invite_text` char(255) default NULL, " \
+			"`date` int(11) NOT NULL default '0', " \
+			"`shown` char(1) default '-', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `logins`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `logins` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`login` char(100) NOT NULL default '', " \
+			"`password` char(100) default NULL, " \
+			"`name` char(30) default NULL, " \
+			"`last_ip` char(15) NOT NULL default 'none', " \
+			"`last_date` int(11) NOT NULL default '0', " \
+			"`access` int(11) NOT NULL default '1', " \
+			"`max_photoalbums` int(1) default '1', " \
+			"`max_groups` int(11) default '3', " \
+			"`main_photo` int(11) NOT NULL default '-1', " \
+			"`online` char(1) default '0', " \
+			"PRIMARY KEY  (`id`), " \
+			"UNIQUE KEY `login` (`login`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `messages`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `messages` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`whose` int(11) NOT NULL default '0', " \
+			"`who_sent` int(11) NOT NULL default '0', " \
+			"`date` int(11) default '0', " \
+			"`message` text, " \
+			"`know` char(1) default '-', " \
+			"`icon` int(1) default '0', " \
+			"`type` char(1) default 'i', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `photo_albums`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `photo_albums` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`owner` int(11) NOT NULL default '0', " \
+			"`photos` int(11) default '0', " \
+			"`maxphotos` int(11) default '5', " \
+			"`caption` char(50) default 'album', " \
+			"`about` char(255) default '', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE) ||
+		(db_nr_query("DROP TABLE IF EXISTS `photos`")!=E_NONE) ||
+		(db_nr_query("CREATE TABLE `photos` ( " \
+			"`id` int(11) NOT NULL auto_increment, " \
+			"`owner` int(11) default NULL, " \
+			"`album` int(11) default NULL, " \
+			"`caption` char(100) default '', " \
+			"`about` char(255) default '', " \
+			"`width` int(11) default NULL, " \
+			"`height` int(11) default NULL, " \
+			"`comment` int(11) NOT NULL default '-1', " \
+			"PRIMARY KEY  (`id`) " \
+			") TYPE=MyISAM")!=E_NONE)
+	){
+		dlgue_claim(gettext("Operation failed!"));
+	}
 	
 	if ( (ec=db_halt())!=E_NONE )
 		return ec;
