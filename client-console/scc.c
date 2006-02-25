@@ -18,6 +18,7 @@
 #include "network.h"
 #include "parse.h"
 #include "ability.h"
+#include "other/other.h"
 
 char *login;
 char *password;

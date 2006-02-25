@@ -1,5 +1,4 @@
 import sys
-import os
 
 baseenv=Environment(CPPPATH=[".","../kaneutil2"])
 env=baseenv.Copy(
@@ -13,9 +12,9 @@ if mode=="debug":
 	if "memory" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_MEMORY")
 	if "net" in debug:
-		env.Append(CCFLAGS=" -DDEBUG_NET")
+		env.Append(CCFLAGS=" -DLOG_NET")
 	if "db" in debug:
-		env.Append(CCFLAGS=" -DDEBUG_DB")
+		env.Append(CCFLAGS=" -DLOG_DB")
 	if "func" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_FUNC")
 	if "log" in debug:

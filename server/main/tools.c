@@ -16,6 +16,7 @@
 #include "database/db.h"
 #include "dialogue/dialogue.h"
 #include "other/other.h"
+#include "options.h"
 
 int toolkey=0;
 
@@ -31,8 +32,9 @@ ecode_t tool_admindb( void )
 		return ec;
 	
 	dlgue_stream(stdin,stdout);
-	dlgue_claim(gettext("Welcome to the Sodalis Database administration tool.\n" \
-			"Input 'help` for help information."));
+	dlgue_claim(gettext(vstr("Welcome to the Sodalis Database administration tool.\n" \
+			"Current database: %s@%s/%s\n" \
+			"Input 'help` for help information.",o_sqlname,o_sqlhost,o_sqldbase)));
 	while ( admin_goon )
 	{
 		if ( dlgue_ask(">> ",&cmd,DLGUE_STRING)!=KE_NONE )
@@ -42,11 +44,27 @@ ecode_t tool_admindb( void )
 			dlgue_claim(gettext("Possible commands:\n" \
 					"\t'help`: show this help;\n" \
 					"\t'quit`: finish the administration;\n" \
+					"\t'add user`: add a new user account;\n" \
 					"\t'blank`: blank the existing database or create a new one;"));
 		}	else
 		if ( !strcmp(cmd,"quit") )
 		{
 			admin_goon=0;
+		}	else
+		if ( !strcmp(cmd,"add user") )
+		{
+			if ( (ec=tool_adduser())!=E_NONE )
+				return ec;
+		}	else
+		if ( !strcmp(cmd,"remove user") )
+		{
+			if ( (ec=tool_adduser())!=E_NONE )
+				return ec;
+		}	else
+		if ( !strcmp(cmd,"user password") )
+		{
+			if ( (ec=tool_adduser())!=E_NONE )
+				return ec;
 		}	else
 		if ( !strcmp(cmd,"blank") )
 		{
@@ -60,6 +78,48 @@ ecode_t tool_admindb( void )
 	
 	if ( (ec=db_halt())!=E_NONE )
 		return ec;
+	
+	pstop();
+	return E_NONE;
+}
+
+ecode_t tool_adduser( void )
+{
+	char *login, *password, *name;
+	int access, grp, alb;
+	int t;
+	ecode_t ec;
+	pstart();
+	
+	if ( dlgue_ask(gettext("Login"),&login,DLGUE_STRING)!=KE_NONE )
+		return E_KU2;
+	login=vstr(login);
+	if ( dlgue_ask(gettext("Password"),&password,DLGUE_STRING)!=KE_NONE )
+		return E_KU2;
+	password=vstr(password);
+	if ( dlgue_ask(gettext("Name"),&name,DLGUE_STRING)!=KE_NONE )
+		return E_KU2;
+	name=vstr(name);
+	if ( dlgue_ask(gettext("Maximum photo albums"),&alb,DLGUE_INT)!=KE_NONE )
+		return E_KU2;
+	if ( dlgue_ask(gettext("Maximum groups"),&grp,DLGUE_INT)!=KE_NONE )
+		return E_KU2;
+	if ( dlgue_ask(gettext("Access level"),&access,DLGUE_INT)!=KE_NONE )
+		return E_KU2;
+	
+	if ( dlgue_ask(vstr(gettext("You are going to create a user \"%s\" %s:%s " \
+			"with access level %d (albums=%d, groups=%d).\n" \
+			"Continue?"),name,login,password,access,alb,grp),&t,DLGUE_BOOL)!=KE_NONE )
+		return E_KU2;
+	
+	if ( t )
+	{
+		if ( (ec=db_nr_query(vstr("INSERT logins VALUES (DEFAULT, '%s', '%s', '%s', " \
+				"DEFAULT, DEFAULT, %d, %d, %d, DEFAULT, DEFAULT)",login,password,name, \
+				access,alb,grp)))!=E_NONE )
+			return ec;
+		dlgue_claim(gettext("User was added successfully!"));
+	}
 	
 	pstop();
 	return E_NONE;

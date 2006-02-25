@@ -30,7 +30,7 @@ void dlgue_stream( FILE *in, FILE *out )
 
 kucode_t dlgue_ask( char *question, void *answer, dlgue_t type )
 {
-	static union
+	static struct
 	{
 		int _int;
 		char _text[DLGUE_STRSIZE];
@@ -49,6 +49,15 @@ kucode_t dlgue_ask( char *question, void *answer, dlgue_t type )
 			#else
 			fprintf(fout," (ENTER cancels the operation)");
 			#endif
+		if ( (type&DLGUE_DEFAULT)==DLGUE_DEFAULT )
+		{
+			#ifdef DLGUE_USE_GETTEXT
+			fprintf(fout,gettext(" (ENTER means the default value)"));
+			#else
+			fprintf(fout," (ENTER means the default value)");
+			#endif
+			type|=DLGUE_CANCEL;
+		}
 		switch ( type&7 )
 		{
 			case DLGUE_BOOL:
