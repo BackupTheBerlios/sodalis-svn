@@ -3,8 +3,10 @@ env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
 
-env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
-#env.Append(CCFLAGS=" -O3")
+Import("sodalis_flags")
+
+#env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
+env.Replace(CCFLAGS=sodalis_flags)
 
 sources = Split("""
 	messages/messages.c

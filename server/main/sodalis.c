@@ -203,7 +203,7 @@ int main( int argc, char *argv[] )
 			printf(gettext("\t'--help`: show out this help;\n"));
 			printf(gettext("\t'--about`: show the information about the server;\n"));
 			printf(gettext("\t'-c file`: use this file istead of '"CFG_FILE"`;\n"));
-			printf(gettext("\t'--blankdb`: blank the existing MySQL database;\n"));
+			printf(gettext("\t'--admindb`: administrate the existing MySQL database;\n"));
 			return EXIT_SUCCESS;
 		}	else
 		//	информация о программе
@@ -216,9 +216,9 @@ int main( int argc, char *argv[] )
 			return EXIT_SUCCESS;
 		}	else
 		//	очистить базу данных
-		if ( strcmp(argv[i],"--blankdb")==0 )
+		if ( strcmp(argv[i],"--admindb")==0 )
 		{
-			toolkey|=TOOL_BLANKDB;
+			toolkey|=TOOL_ADMINDB;
 		}	else
 		//	неверный ключ
 		{
@@ -275,8 +275,8 @@ int main( int argc, char *argv[] )
 	//	обработка полученных данных
 	if ( toolkey!=0 )
 	{
-		if ( (toolkey&TOOL_BLANKDB)==TOOL_BLANKDB )
-			if ( (ecode=tool_blankdb())!=E_NONE )
+		if ( (toolkey&TOOL_ADMINDB)==TOOL_ADMINDB )
+			if ( (ecode=tool_admindb())!=E_NONE )
 			{
 				plog("%s\n",errtext(ecode));
 				return EXIT_FAILURE;

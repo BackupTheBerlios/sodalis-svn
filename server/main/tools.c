@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <libintl.h>
+#include <string.h>
 
 #include "tools.h"
 #include "ecode.h"
@@ -18,15 +19,59 @@
 
 int toolkey=0;
 
+ecode_t tool_admindb( void )
+{
+	int admin_goon=1;
+	ecode_t ec;
+	char *cmd;
+	
+	pstart();
+	
+	if ( (ec=db_init())!=E_NONE )
+		return ec;
+	
+	dlgue_stream(stdin,stdout);
+	dlgue_claim(gettext("Welcome to the Sodalis Database administration tool.\n" \
+			"Input 'help` for help information."));
+	while ( admin_goon )
+	{
+		if ( dlgue_ask(">> ",&cmd,DLGUE_STRING)!=KE_NONE )
+			return E_KU2;
+		if ( !strcmp(cmd,"help") )
+		{
+			dlgue_claim(gettext("Possible commands:\n" \
+					"\t'help`: show this help;\n" \
+					"\t'quit`: finish the administration;\n" \
+					"\t'blank`: blank the existing database or create a new one;"));
+		}	else
+		if ( !strcmp(cmd,"quit") )
+		{
+			admin_goon=0;
+		}	else
+		if ( !strcmp(cmd,"blank") )
+		{
+			if ( (ec=tool_blankdb())!=E_NONE )
+				return ec;
+		}	else
+		{
+			dlgue_claim(gettext("Invalid command, see help for possible ones."));
+		}
+	}
+	
+	if ( (ec=db_halt())!=E_NONE )
+		return ec;
+	
+	pstop();
+	return E_NONE;
+}
+
 ecode_t tool_blankdb( void )
 {
-	ecode_t ec;
 	kucode_t kec;
 	int t;
 	char *backuppath=NULL;
 	pstart();
 	
-	dlgue_stream(stdin,stdout);
 	kec=dlgue_ask(gettext("WARNING! You are going to crete a blank database, " \
 			"this will drop all the existing tables! " \
 			"Would You like to back up the current database if it exists?"), \
@@ -53,9 +98,6 @@ ecode_t tool_blankdb( void )
 		if ( kec!=KE_NONE )
 			return E_KU2;
 	}
-	
-	if ( (ec=db_init())!=E_NONE )
-		return ec;
 	
 	if ( backuppath!=NULL )
 	{
@@ -145,9 +187,6 @@ ecode_t tool_blankdb( void )
 	){
 		dlgue_claim(gettext("Operation failed!"));
 	}
-	
-	if ( (ec=db_halt())!=E_NONE )
-		return ec;
 	
 	pstop();
 	return E_NONE;

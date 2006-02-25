@@ -10,10 +10,11 @@
 #define __TOOLS_H__
 #include "ecode.h"
 
-#define TOOL_BLANKDB 1
+#define TOOL_ADMINDB 1
 
 extern int toolkey;
 
+ecode_t tool_admindb( void );
 ecode_t tool_blankdb( void );
 
 #endif

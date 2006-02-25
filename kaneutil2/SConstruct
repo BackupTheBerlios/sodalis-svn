@@ -3,9 +3,22 @@ env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
 
-env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -DDEBUG_FUNC -g")
-env.Append(CCFLAGS=" -DDEBUG_LOG")
-#env.Append(CCFLAGS=" -O3")
+mode=ARGUMENTS.get("mode","debug")
+if mode=="debug":
+	env.Append(CCFLAGS=" -g -DDEBUG")
+	debug=ARGUMENTS.get("debug","memory,func,log")
+	if "memory" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_MEMORY")
+	if "func" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_FUNC")
+	if "log" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_LOG")
+elif mode=="release":
+	env.Append(CCFLAGS=" -O3")
+	debug=""
+else:
+	print "Invalid mode ( debug|release )"
+	sys.exit()
 
 sources = Split("""
 	errors/errors.c

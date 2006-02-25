@@ -1,12 +1,33 @@
+import sys
+import os
+
 baseenv=Environment(CPPPATH=[".","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
 
-env.Append(CCFLAGS=" -DDEBUG -DDEBUG_MEMORY -g")
-env.Append(CCFLAGS=" -DLOG_NET -DLOG_DB")
-env.Append(CCFLAGS=" -DDEBUG_FUNC")
-#env.Append(CCFLAGS=" -O3")
+mode=ARGUMENTS.get("mode","debug")
+if mode=="debug":
+	env.Append(CCFLAGS=" -g -DDEBUG")
+	debug=ARGUMENTS.get("debug","memory,net,db,func,log")
+	if "memory" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_MEMORY")
+	if "net" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_NET")
+	if "db" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_DB")
+	if "func" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_FUNC")
+	if "log" in debug:
+		env.Append(CCFLAGS=" -DDEBUG_LOG")
+elif mode=="release":
+	env.Append(CCFLAGS=" -O3")
+	debug=""
+else:
+	print "Invalid mode ( debug|release )"
+	sys.exit()
+
+
 
 sources = Split("""
 	main/sodalis.c
@@ -32,6 +53,7 @@ libpaths = Split("""
 	ability
 	""")
 
+sodalis_flags=env["CCFLAGS"]
 SConscript("../kaneutil2/SConstruct")
-SConscript("ability/SConstruct")
+SConscript("ability/SConstruct","sodalis_flags")
 Default(env.Program("sodalisd",sources,LIBS=libs,LIBPATH=libpaths))

@@ -6,6 +6,7 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
+#include <stdlib.h>
 #include "user.h"
 #include "utree.h"
 #include "abtree/abtree.template.c"
