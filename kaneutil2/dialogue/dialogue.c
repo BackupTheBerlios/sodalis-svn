@@ -80,7 +80,7 @@ kucode_t dlgue_ask( char *question, void *answer, dlgue_t type )
 		if ( ans._text[DLGUE_STRSIZE-1]!=0 )
 			return KE_SYNTAX;
 		
-		if ( ((type&DLGUE_CANCEL)==DLGUE_CANCEL) && (ans._text[0]==10) )
+		if ( ((type&DLGUE_CANCEL)==DLGUE_CANCEL) && (ans._text[0]=='\n') )
 		{
 			return KE_EMPTY;
 		}	else

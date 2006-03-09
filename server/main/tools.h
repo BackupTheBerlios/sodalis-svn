@@ -16,6 +16,9 @@ extern int toolkey;
 
 ecode_t tool_admindb( void );
 ecode_t tool_adduser( void );
+ecode_t tool_lsuser( void );
+ecode_t tool_rmuser( void );
+ecode_t tool_passwuser( void );
 ecode_t tool_blankdb( void );
 
 #endif

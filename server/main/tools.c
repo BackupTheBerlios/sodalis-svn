@@ -38,13 +38,19 @@ ecode_t tool_admindb( void )
 	while ( admin_goon )
 	{
 		if ( dlgue_ask(">> ",&cmd,DLGUE_STRING)!=KE_NONE )
+		{
+			db_halt();
 			return E_KU2;
+		}
 		if ( !strcmp(cmd,"help") )
 		{
 			dlgue_claim(gettext("Possible commands:\n" \
 					"\t'help`: show this help;\n" \
 					"\t'quit`: finish the administration;\n" \
 					"\t'add user`: add a new user account;\n" \
+					"\t'list users`: list user accounts;\n" \
+					"\t'remove user`: remove a user account;\n" \
+					"\t'user password`: change user password;\n" \
 					"\t'blank`: blank the existing database or create a new one;"));
 		}	else
 		if ( !strcmp(cmd,"quit") )
@@ -54,22 +60,27 @@ ecode_t tool_admindb( void )
 		if ( !strcmp(cmd,"add user") )
 		{
 			if ( (ec=tool_adduser())!=E_NONE )
-				return ec;
+				goto errorcase;
+		}	else
+		if ( !strcmp(cmd,"list users") )
+		{
+			if ( (ec=tool_lsuser())!=E_NONE )
+				goto errorcase;
 		}	else
 		if ( !strcmp(cmd,"remove user") )
 		{
-			if ( (ec=tool_adduser())!=E_NONE )
-				return ec;
+			if ( (ec=tool_rmuser())!=E_NONE )
+				goto errorcase;
 		}	else
 		if ( !strcmp(cmd,"user password") )
 		{
-			if ( (ec=tool_adduser())!=E_NONE )
-				return ec;
+			if ( (ec=tool_passwuser())!=E_NONE )
+				goto errorcase;
 		}	else
 		if ( !strcmp(cmd,"blank") )
 		{
 			if ( (ec=tool_blankdb())!=E_NONE )
-				return ec;
+				goto errorcase;
 		}	else
 		{
 			dlgue_claim(gettext("Invalid command, see help for possible ones."));
@@ -81,6 +92,10 @@ ecode_t tool_admindb( void )
 	
 	pstop();
 	return E_NONE;
+	
+	errorcase:
+	db_halt();
+	return ec;
 }
 
 ecode_t tool_adduser( void )
@@ -121,6 +136,44 @@ ecode_t tool_adduser( void )
 		dlgue_claim(gettext("User was added successfully!"));
 	}
 	
+	pstop();
+	return E_NONE;
+}
+
+ecode_t tool_lsuser( void )
+{
+	int cnt, i;
+	char *sqlcond;
+	char **dbres;
+	pstart();
+	
+	if ( (cnt=db_query("SELECT id, login, name, access, max_photoalbums, max_groups " \
+			"FROM logins"))<0 )
+		return ecode;
+	
+	dlgue_claim("ID\tLogin, Name\tAccess:Max albums:Max gourps");
+	for ( i=0; i<cnt; i++ )
+	{
+		if ( (dbres=db_row())==NULL )
+			return ecode;
+		dlgue_claim(vstr("%s\t%s, %s\t%s:%s:%s",dbres[0],dbres[1],dbres[2], \
+				dbres[3], dbres[4],dbres[5]));
+	}
+	
+	pstop();
+	return E_NONE;
+}
+
+ecode_t tool_rmuser( void )
+{
+	pstart();
+	pstop();
+	return E_NONE;
+}
+
+ecode_t tool_passwuser( void )
+{
+	pstart();
 	pstop();
 	return E_NONE;
 }
