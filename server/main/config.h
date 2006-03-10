@@ -8,15 +8,22 @@
 
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+#include "other/other.h"
 
 #define VERSION 1
 #define PROTOCOL sodalisnpv2
 
-#define CFG_FILE "sodalis.cfg"
+#ifndef PREFIX
+#define __PREFIX "."
+#else
+#define __PREFIX STR(PREFIX)
+#endif
+
+#define CFG_FILE __PREFIX"/etc/sodalis.cfg"
 
 #define CFG_PORT 1986
 #define CFG_PORTLOG 10
-#define CFG_LOGFILE "sodalis.log"
+#define CFG_LOGFILE __PREFIX"/var/sodalis/sodalis.log"
 
 #define CFG_SQLHOST "localhost"
 #define CFG_SQLNAME "sodalis"
@@ -28,7 +35,7 @@
 
 #define CFG_DEFMSGTYPE 1
 
-#define CFG_PHOTODIR "/var/sodalis/ph"
+#define CFG_PHOTODIR __PREFIX"/var/sodalis/ph"
 #define CFG_PHOTOSIZE 512
 #define CFG_PHOTOAREA 120000
 

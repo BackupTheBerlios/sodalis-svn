@@ -36,7 +36,8 @@ enum
 	E_AGAIN,
 	E_ARG,
 	E_OBUFFER,
-	E_UBUFFER
+	E_UBUFFER,
+	E_NODATA
 }	ecode_t;
 
 extern ecode_t ecode;

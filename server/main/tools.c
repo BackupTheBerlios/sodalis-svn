@@ -132,7 +132,10 @@ ecode_t tool_adduser( void )
 		if ( (ec=db_nr_query(vstr("INSERT logins VALUES (DEFAULT, '%s', '%s', '%s', " \
 				"DEFAULT, DEFAULT, %d, %d, %d, DEFAULT, DEFAULT)",login,password,name, \
 				access,alb,grp)))!=E_NONE )
-			return ec;
+		{
+			dlgue_claim(errtext(ec));
+			return E_NONE;
+		}
 		dlgue_claim(gettext("User was added successfully!"));
 	}
 	
@@ -143,19 +146,24 @@ ecode_t tool_adduser( void )
 ecode_t tool_lsuser( void )
 {
 	int cnt, i;
-	char *sqlcond;
 	char **dbres;
 	pstart();
 	
 	if ( (cnt=db_query("SELECT id, login, name, access, max_photoalbums, max_groups " \
 			"FROM logins"))<0 )
-		return ecode;
+	{
+		dlgue_claim(errtext(ecode));
+		return E_NONE;
+	}
 	
 	dlgue_claim("ID\tLogin, Name\tAccess:Max albums:Max gourps");
 	for ( i=0; i<cnt; i++ )
 	{
 		if ( (dbres=db_row())==NULL )
-			return ecode;
+		{
+			dlgue_claim(errtext(ecode));
+			return E_NONE;
+		}
 		dlgue_claim(vstr("%s\t%s, %s\t%s:%s:%s",dbres[0],dbres[1],dbres[2], \
 				dbres[3], dbres[4],dbres[5]));
 	}
@@ -166,14 +174,92 @@ ecode_t tool_lsuser( void )
 
 ecode_t tool_rmuser( void )
 {
+	kucode_t kec;
+	int dbret;
+	char *login;
 	pstart();
+	
+	kec=dlgue_ask(gettext("You are going to remove a user! This operation does not " \
+			"remove all data related to the user except its login account. " \
+			"Enter the login name of the user"),&login,DLGUE_STRING|DLGUE_CANCEL);
+	if ( kec==KE_EMPTY )
+	{
+		dlgue_claim(gettext("Operation canceled!"));
+		return E_NONE;
+	}
+	if ( kec!=E_NONE )
+		return E_KU2;
+	
+	dbret=db_query(vstr("SELECT id FROM logins WHERE login='%s'",login));
+	if ( dbret==0 )
+	{
+		dlgue_claim(gettext("User was not found!"));
+		return E_NONE;
+	}
+	if ( dbret<0 )
+	{
+		dlgue_claim(errtext(ecode));
+		return E_NONE;
+	}
+	
+	if ( (ecode=db_nr_query(vstr("DELETE FROM logins WHERE login='%s'",login)))!=E_NONE )
+	{
+		dlgue_claim(errtext(ecode));
+		return E_NONE;
+	}
+	
+	dlgue_claim(gettext("User account was removed successfully!"));
+	
 	pstop();
 	return E_NONE;
 }
 
 ecode_t tool_passwuser( void )
 {
+	kucode_t kec;
+	int dbret;
+	char *login, *password;
 	pstart();
+	
+	kec=dlgue_ask(gettext("Enter the login name of the user"),&login,DLGUE_STRING|DLGUE_CANCEL);
+	if ( kec==KE_EMPTY )
+	{
+		dlgue_claim(gettext("Operation canceled!"));
+		return E_NONE;
+	}
+	if ( kec!=E_NONE )
+		return E_KU2;
+	login=vstr(login);
+	
+	dbret=db_query(vstr("SELECT id FROM logins WHERE login='%s'",login));
+	if ( dbret==0 )
+	{
+		dlgue_claim(gettext("User was not found!"));
+		return E_NONE;
+	}
+	if ( dbret<0 )
+	{
+		dlgue_claim(errtext(ecode));
+		return E_NONE;
+	}
+	
+	kec=dlgue_ask(gettext("Enter a new password"),&password,DLGUE_STRING|DLGUE_CANCEL);
+	if ( kec==KE_EMPTY )
+	{
+		dlgue_claim(gettext("Operation canceled!"));
+		return E_NONE;
+	}
+	if ( kec!=E_NONE )
+		return E_KU2;
+	
+	if ( (ecode=db_nr_query(vstr("UPDATE logins SET password='%s' WHERE login='%s'",password,login)))!=E_NONE )
+	{
+		dlgue_claim(errtext(ecode));
+		return E_NONE;
+	}
+	
+	dlgue_claim(gettext("User password has been changed successfully!"));
+	
 	pstop();
 	return E_NONE;
 }
@@ -187,7 +273,7 @@ ecode_t tool_blankdb( void )
 	
 	kec=dlgue_ask(gettext("WARNING! You are going to crete a blank database, " \
 			"this will drop all the existing tables! " \
-			"Would You like to back up the current database if it exists?"), \
+			"Would You like to back up the current database if it exists? (not implemented yet)"), \
 			&t,DLGUE_BOOL|DLGUE_CANCEL);
 	
 	if ( kec==KE_EMPTY )

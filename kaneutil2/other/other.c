@@ -67,7 +67,7 @@ int qdir2( char *path )
 	dir=opendir(path);
 	if ( dir==NULL )
 	{
-		plog(gettext("Failed to open a directory: %s\n"),strerror(errno));
+		plog(gettext("Failed to open a directory '%s`: %s\n"),path,strerror(errno));
 		return 1;
 	}	else
 	{

@@ -108,6 +108,8 @@ char *errtext( ecode_t c )
 			return gettext("Buffer overflow");
 		case E_UBUFFER:
 			return gettext("Buffer underrun");
+		case E_NODATA:
+			return gettext("No data available");
 		default:
 			return gettext("Invalid error code");
 	}
