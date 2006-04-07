@@ -7,6 +7,27 @@
 
 import sys
 
+Help("""
+Build the server: 'scons prefix=... mode=... debug=...`
+Clear the built server: 'scons -c`
+Install the server: 'scons install prefix=... mode=... debug...`
+	WARNING: server might be rebuilt firstly
+
+========
+Install prefix: path, where the server will be installed; default: /usr/local
+
+Build mode: debug|release; default: debug
+	'debug`: build debug version, debug mode can be set
+	'release`: build the release version, debug mode setting will not be used
+	
+Debug mode: memory,net,db,func,log; default: all of them
+	'memory`: watch memory allocations
+	'net`: log all network messages
+	'db`: log all SQL requests
+	'func`: watch all function calls (entry and exit points)
+	'log`: write all log messages on the screen besides the log file
+	""")
+
 baseenv=Environment(CPPPATH=[".","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
@@ -36,27 +57,6 @@ else:
 prefix=ARGUMENTS.get("prefix","/usr/local")
 env.Append(CCFLAGS=" -DPREFIX="+prefix)
 
-Help("""
-Build the server: 'scons prefix=... mode=... debug=...`
-Clear the built server: 'scons -c`
-Install the server: 'scons install prefix=... mode=... debug...`
-	WARNING: server might be rebuilt firstly
-
-========
-Install prefix: path, where the server will be installed; default: /usr/local
-
-Build mode: debug|release; default: debug
-	'debug`: build debug version, debug mode can be set
-	'release`: build the release version, debug mode setting will not be used
-	
-Debug mode: memory,net,db,func,log; default: all of them
-	'memory`: watch memory allocations
-	'net`: log all network messages
-	'db`: log all SQL requests
-	'func`: watch all function calls (entry and exit points)
-	'log`: write all log messages on the screen besides the log file
-	""")
-
 sources = Split("""
 	main/sodalis.c
 	main/tools.c
@@ -82,13 +82,12 @@ libpaths = Split("""
 	""")
 
 sodalis_flags=env["CCFLAGS"]
-SConscript("../kaneutil2/SConstruct")
 SConscript("ability/SConstruct","sodalis_flags")
 
 sodalisd=env.Program("sodalisd",sources,LIBS=libs,LIBPATH=libpaths)
 Default(sodalisd)
 
-env.Alias("install",prefix)
+env.Alias("installserver",prefix)
 env.Install(
 	prefix+"/bin/",
 	sodalisd)

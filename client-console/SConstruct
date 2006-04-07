@@ -1,4 +1,11 @@
-baseenv=Environment(CPPPATH=[".","commands","../kaneutil2"])
+#
+#	SConstruct file for Sodalis Project console client
+#
+#	Fri Apr  7 18:09:03 2006
+#		J. Anton, Copyright 2006
+#
+
+baseenv=Environment(CPPPATH=[".","../library","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
 	)
@@ -24,24 +31,16 @@ else:
 
 sources = Split("""
 	scc.c
-	ability.c
-	network.c
-	parse.c
-	
-	commands/msg.c
-	commands/list.c
-	commands/show.c
-	commands/delete.c
-	commands/send.c
 	""")
 
 libs = Split("""
 	ku2
+	sodalis
 	""")
 
 libpaths = Split("""
 	../kaneutil2
+	../library
 	""")
 
-SConscript("../kaneutil2/SConstruct")
 Default(env.Program("scc",sources,LIBS=libs,LIBPATH=libpaths))
