@@ -1,7 +1,7 @@
 #
-#	SConstruct file for Sodalis Project server
+#	SConstruct file for Sodalis Project client library
 #
-#	Fri Apr  7 17:08:38 2006
+#	Fri Apr  7 17:10:15 2006
 #		J. Anton, Copyright 2006
 #
 
@@ -15,17 +15,13 @@ env=baseenv.Copy(
 mode=ARGUMENTS.get("mode","debug")
 if mode=="debug":
 	env.Append(CCFLAGS=" -g -DDEBUG")
-	debug=ARGUMENTS.get("debug","memory,net,db,func,log")
+	debug=ARGUMENTS.get("debug","memory,net,func")
 	if "memory" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_MEMORY")
 	if "net" in debug:
 		env.Append(CCFLAGS=" -DLOG_NET")
-	if "db" in debug:
-		env.Append(CCFLAGS=" -DLOG_DB")
 	if "func" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_FUNC")
-	if "log" in debug:
-		env.Append(CCFLAGS=" -DDEBUG_LOG")
 elif mode=="release":
 	env.Append(CCFLAGS=" -O3")
 	debug=""
@@ -37,13 +33,13 @@ prefix=ARGUMENTS.get("prefix","/usr/local")
 env.Append(CCFLAGS=" -DPREFIX="+prefix)
 
 Help("""
-Build the server: 'scons prefix=... mode=... debug=...`
-Clear the built server: 'scons -c`
-Install the server: 'scons install prefix=... mode=... debug...`
-	WARNING: server might be rebuilt firstly
+Build the library: 'scons prefix=... mode=... debug=...`
+Clear the built library: 'scons -c`
+Install the library: 'scons install prefix=... mode=... debug...`
+	WARNING: library might be rebuilt firstly
 
 ========
-Install prefix: path, where the server will be installed; default: /usr/local
+Install prefix: path, where the library will be installed; default: /usr/local
 
 Build mode: debug|release; default: debug
 	'debug`: build debug version, debug mode can be set
@@ -52,46 +48,35 @@ Build mode: debug|release; default: debug
 Debug mode: memory,net,db,func,log; default: all of them
 	'memory`: watch memory allocations
 	'net`: log all network messages
-	'db`: log all SQL requests
 	'func`: watch all function calls (entry and exit points)
-	'log`: write all log messages on the screen besides the log file
 	""")
 
 sources = Split("""
-	main/sodalis.c
-	main/tools.c
-	network/net.c
-	network/nstore.c
-	user/user.c
-	user/utree.c
-	database/db.c
-	parse/parse.c
+	photos/photos.c
+	admin/admin.c
+	messages/messages.c
+	main/parser.c
+	main/ecode.c
+	main/network.c
+	friends/friends.c
+	lists/lists.c
 	""")
 
 libs = Split("""
 	ku2
-	mysqlclient
-	ability
-	Magick
 	""")
 
 libpaths = Split("""
 	../kaneutil2
-	/usr/lib/mysql
-	ability
 	""")
 
 sodalis_flags=env["CCFLAGS"]
 SConscript("../kaneutil2/SConstruct")
-SConscript("ability/SConstruct","sodalis_flags")
 
-sodalisd=env.Program("sodalisd",sources,LIBS=libs,LIBPATH=libpaths)
-Default(sodalisd)
+libsodalis=env.SharedLibrary("sodalis",sources,LIBS=libs,LIBPATH=libpaths)
+Default(libsodalis)
 
 env.Alias("install",prefix)
 env.Install(
-	prefix+"/bin/",
-	sodalisd)
-env.Install(
-	prefix+"/etc/",
-	["sodalis.cfg"])
+	prefix+"/lib/",
+	libsodalis)

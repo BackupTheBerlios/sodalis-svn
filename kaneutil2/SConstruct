@@ -1,3 +1,10 @@
+#
+#	SConstruct file for Kane Utilities 2
+#
+#	Fri Apr  7 17:16:57 2006
+#		J. Anton, Copyright 2006
+#
+
 baseenv=Environment(CPPPATH=".")
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
