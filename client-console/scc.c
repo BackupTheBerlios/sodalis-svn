@@ -12,9 +12,13 @@
 
 #include "scc.h"
 #include "errors/debug.h"
-#include "main/libmain.h"
 
-//	scc [parameters] [host] [loing] [password]
+#include "main/libmain.h"
+#include "main/network.h"
+
+sod_session *session;
+
+//	scc [parameters] [host] [login] [password]
 int main( int argc, char *argv[] )
 {
 	pstart();
@@ -26,8 +30,9 @@ int main( int argc, char *argv[] )
 	bindtextdomain("sodaliscc","gettext");
 	textdomain("sodaliscc");
 	
-	sod_init();
-	sod_halt(NULL);
+	session=sod_init();
+	sod_connect(session,NULL,0,NULL,NULL);
+	sod_halt(session);
 	
 	pstop();
 	return EXIT_SUCCESS;

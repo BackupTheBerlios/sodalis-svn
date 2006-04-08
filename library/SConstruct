@@ -43,6 +43,7 @@ if mode=="debug":
 		env.Append(CCFLAGS=" -DDEBUG_FUNC")
 elif mode=="release":
 	env.Append(CCFLAGS=" -O3")
+	env.Append(LINKFLAGS=" -s")
 	debug=""
 else:
 	print "Invalid mode ( debug|release )"

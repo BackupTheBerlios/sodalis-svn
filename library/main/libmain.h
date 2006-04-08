@@ -6,8 +6,9 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
-#ifndef __LIBMAIN_H__
-#define __LIBMAIN_H__
+#ifndef SOD__LIBMAIN_H__
+#define SOD__LIBMAIN_H__
+#include "errors/open_code.h"
 
 #include "ecode.h"
 
@@ -17,8 +18,8 @@
 typedef
 enum
 {
-	SOD_NOT_CONNECTED,
-	SOD_CONNECTED
+	SOD_NOT_CONNECTED,		// не соеденён
+	SOD_CONNECTED			// соеденён
 }	sod_status_t;
 
 /*
@@ -27,13 +28,27 @@ enum
 typedef
 struct
 {
-	sod_status_t status;
-	ecode_t ecode;
-	char *errortext;
-	int socket;
+	sod_status_t status;	// статус соединения
+	secode_t ecode;		// код последней ошибки
+	char *errortext;		// текст последней ошибки
+	int socket;				// сокет соединения
 }	sod_session;
 
+/*
+	1.	Инициализация библиотеки, создание сессии
+	2.	---
+	3.	Указатель на сессию, или 0, если не хватило памяти
+	4.	---
+*/
 sod_session *sod_init( void );
+
+/*
+	1.	Закрытие сессии
+	2.	session - сессия
+	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
+	4.	ntni
+*/
 int sod_halt( sod_session *session );
 
+#include "errors/close_code.h"
 #endif

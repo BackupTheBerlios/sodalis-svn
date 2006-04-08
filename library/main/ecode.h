@@ -21,9 +21,9 @@
 typedef
 enum
 {
-	E_NONE,
-	E_MEMORY,
-	E_KU2
-}	ecode_t;
+	SE_NONE,
+	SE_MEMORY,
+	SE_KU2
+}	secode_t;
 
 #endif
