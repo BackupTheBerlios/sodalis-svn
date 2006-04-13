@@ -30,6 +30,10 @@ else:
 	print "Invalid mode ( debug|release )"
 	sys.exit()
 
+use=ARGUMENTS.get("use","gettext")
+if "gettext" in use:
+	env.Append(CCFLAGS=" -DUSE_GETTEXT")
+
 sources = Split("""
 	scc.c
 	""")

@@ -14,7 +14,7 @@
 #include "errors/ecode.h"
 #include "errors/debug.h"
 
-#ifdef DLGUE_USE_GETTEXT
+#ifdef USE_GETTEXT
 #include <libintl.h>
 #endif
 
@@ -44,14 +44,14 @@ kucode_t dlgue_ask( char *question, void *answer, dlgue_t type )
 	{
 		fprintf(fout,question);
 		if ( (type&DLGUE_CANCEL)==DLGUE_CANCEL )
-			#ifdef DLGUE_USE_GETTEXT
+			#ifdef USE_GETTEXT
 			fprintf(fout,gettext(" (ENTER cancels the operation)"));
 			#else
 			fprintf(fout," (ENTER cancels the operation)");
 			#endif
 		if ( (type&DLGUE_DEFAULT)==DLGUE_DEFAULT )
 		{
-			#ifdef DLGUE_USE_GETTEXT
+			#ifdef USE_GETTEXT
 			fprintf(fout,gettext(" (ENTER means the default value)"));
 			#else
 			fprintf(fout," (ENTER means the default value)");

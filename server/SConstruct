@@ -8,13 +8,16 @@
 import sys
 
 Help("""
-Build the server: 'scons prefix=... mode=... debug=...`
+Build the server: 'scons prefix=... use=... mode=... debug=...`
 Clear the built server: 'scons -c`
-Install the server: 'scons install prefix=... mode=... debug...`
+Install the server: 'scons install prefix=... use=... mode=... debug...`
 	WARNING: server might be rebuilt firstly
 
 ========
 Install prefix: path, where the server will be installed; default: /usr/local
+
+Special abilities' list; default: gettext
+	'gettext`: use gettext library
 
 Build mode: debug|release; default: debug
 	'debug`: build debug version, debug mode can be set
@@ -54,6 +57,10 @@ elif mode=="release":
 else:
 	print "Invalid mode ( debug|release )"
 	sys.exit()
+
+use=ARGUMENTS.get("use","gettext")
+if "gettext" in use:
+	env.Append(CCFLAGS=" -DUSE_GETTEXT")
 
 prefix=ARGUMENTS.get("prefix","/usr/local")
 env.Append(CCFLAGS=" -DPREFIX="+prefix)

@@ -6,9 +6,9 @@
 #
 
 Help("""
-Build the Sodalis Project: 'scons build=... prefix=... mode=... debug=...`
+Build the Sodalis Project: 'scons build=... prefix=... use=... mode=... debug=...`
 Clear the built Sodalis Project: 'scons -c`
-Install the Sodalis Project: 'scons install build=... prefix=... mode=... debug...`
+Install the Sodalis Project: 'scons install build=... prefix=... use=... mode=... debug...`
 	WARNING: project might be rebuilt firstly
 
 ========
@@ -23,6 +23,9 @@ Build list: ku2,library,client,server; default: all of them
 		* Kane Utilities will be built automatically
 
 Install prefix: path, where the project will be installed; default: /usr/local
+
+Special abilities' list; default: gettext
+	'gettext`: use gettext library
 
 Build mode: debug|release; default: debug
 	'debug`: build debug version, debug mode can be set

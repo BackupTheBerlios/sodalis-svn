@@ -9,7 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#ifdef USE_GETTEXT
 #include <libintl.h>
+#endif
+
 #include <time.h>
 #include <stdarg.h>
 
@@ -27,13 +31,21 @@ kucode_t openlog( char *file )
 	f=fopen(file,"a");
 	if ( f==NULL )
 	{
+		#ifdef USE_GETTEXT
 		plog(gettext("Failed to open a log file: %s\n"),strerror(errno));
+		#else
+		plog("Failed to open a log file: %s\n",strerror(errno));
+		#endif
 		return KE_IO;
 	}
 	
 	logstream=f;
 	fprintf(logstream,"========\n");
+	#ifdef USE_GETTEXT
 	plog(gettext("Logging has been started\n"));
+	#else
+	plog("Logging has been started\n");
+	#endif
 	
 	pstop();
 	return KE_NONE;
@@ -43,12 +55,20 @@ kucode_t closelog( void )
 {
 	pstart();
 	
+	#ifdef USE_GETTEXT
 	plog(gettext("Logging is being stopped\n"));
+	#else
+	plog("Logging is being stopped\n");
+	#endif
 	fprintf(logstream,"========\n\n");
 	
 	if ( fclose(logstream)!=0 )
 	{
+		#ifdef USE_GETTEXT
 		plog(gettext("Failed to close a log file: %s\n"),strerror(errno));
+		#else
+		plog("Failed to close a log file: %s\n",strerror(errno));
+		#endif
 		return KE_IO;
 	}
 	

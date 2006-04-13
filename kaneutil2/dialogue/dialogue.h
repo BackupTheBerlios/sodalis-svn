@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #define DLGUE_STRSIZE 256
-#define DLGUE_USE_GETTEXT
 
 typedef
 enum
