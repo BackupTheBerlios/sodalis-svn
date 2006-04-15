@@ -67,6 +67,7 @@ sources = Split("""
 	main/ecode.c
 	main/network.c
 	main/libmain.c
+	main/events.c
 	friends/friends.c
 	lists/lists.c
 	""")

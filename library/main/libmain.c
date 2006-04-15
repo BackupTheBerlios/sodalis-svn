@@ -45,3 +45,10 @@ int sod_halt( sod_session *session )
 	pstop();
 	return SOD_OK;
 }
+
+int sod_iterate( sod_session *session )
+{
+	pstart();
+	pstop();
+	return SOD_OK;
+}

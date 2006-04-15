@@ -37,7 +37,7 @@ struct
 /*
 	1.	Инициализация библиотеки, создание сессии
 	2.	---
-	3.	Указатель на сессию, или 0, если не хватило памяти
+	3.	Указатель на сессию, или NULL, если не хватило памяти
 	4.	---
 */
 sod_session *sod_init( void );
@@ -49,6 +49,15 @@ sod_session *sod_init( void );
 	4.	ntni
 */
 int sod_halt( sod_session *session );
+
+/*
+	1.	Цикл итерации сессии, обмен сообщениями с сервером и
+		вызов обработчиков событий
+	2.	session - сессия
+	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
+	4.	ntni
+*/
+int sod_iterate( sod_session *session );
 
 #include "errors/close_code.h"
 #endif
