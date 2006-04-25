@@ -33,5 +33,13 @@ int sod_connect( sod_session *session, char *host, u_int16_t port, char *login, 
 */
 int sod_disconnect( sod_session *session );
 
+/*
+	1.	Обменяться данными
+	2.	session - сессия
+	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
+	4.	ntni
+*/
+int sod_exchange_data( sod_session *session );
+
 #include "errors/close_code.h"
 #endif

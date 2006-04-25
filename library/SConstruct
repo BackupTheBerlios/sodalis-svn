@@ -23,7 +23,7 @@ Build mode: debug|release; default: debug
 	'debug`: build debug version, debug mode can be set
 	'release`: build the release version, debug mode setting will not be used
 	
-Debug mode: memory,net,db,func,log; default: all of them
+Debug mode: memory,net,func; default: all of them
 	'memory`: watch memory allocations
 	'net`: log all network messages
 	'func`: watch all function calls (entry and exit points)

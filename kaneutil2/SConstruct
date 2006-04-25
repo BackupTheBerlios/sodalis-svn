@@ -42,5 +42,3 @@ sources = Split("""
 	""")
 
 Default(env.Library("ku2", sources))
-
-baseenv.Program("ku2test", "test/ku.c", CCFLAGS=env['CCFLAGS'], LIBS="ku2", LIBPATH=".")

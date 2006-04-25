@@ -6,6 +6,10 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
+#ifdef USE_GETTEXT
+#include <libintl.h>
+#endif
+
 #include "network.h"
 #include "errors/debug.h"
 #include "ecode.h"
@@ -22,6 +26,19 @@ int sod_disconnect( sod_session *session )
 {
 	pstart();
 	session->status=SOD_NOT_CONNECTED;
+	pstop();
+	return SOD_OK;
+}
+
+int sod_exchange_data( sod_session *session )
+{
+	pstart();
+	
+	if ( session->status!=SOD_CONNECTED )
+	{
+		sod_throw_error(SE_NOT_CONNECTED,"The current session is not connected");
+	}
+	
 	pstop();
 	return SOD_OK;
 }

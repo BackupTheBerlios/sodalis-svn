@@ -13,6 +13,13 @@
 #include "ecode.h"
 
 /*
+	Размер IO буффера
+*/
+#ifndef SOD_BUFFER_SIZE
+#define SOD_BUFFER_SIZE 2048
+#endif
+
+/*
 	Статус сессии
 */
 typedef
@@ -31,7 +38,14 @@ struct
 	sod_status_t status;	// статус соединения
 	secode_t ecode;		// код последней ошибки
 	char *errortext;		// текст последней ошибки
+	char *errorfunc;		// функция, где произошла ошибка
 	int socket;				// сокет соединения
+	
+							// сетевые буфферы
+	char inbuf[SOD_BUFFER_SIZE];
+	char outbuf[SOD_BUFFER_SIZE];
+	int inpos, instart;		// текущие (последние) и начальные позиции
+	int outpos, outstart;	// в буфферах
 }	sod_session;
 
 /*

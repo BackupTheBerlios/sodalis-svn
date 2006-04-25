@@ -5,6 +5,29 @@
 #		J. Anton, Copyright 2006
 #
 
+import sys
+
+Help("""
+Build the console client: 'scons prefix=... use=... mode=... debug=...`
+Clear the built client: 'scons -c`
+Install the client: 'scons install prefix=... use=... mode=... debug...`
+	WARNING: client might be rebuilt firstly
+
+========
+Install prefix: path, where the client will be installed; default: /usr/local
+
+Special abilities' list; default: gettext
+	'gettext`: use gettext library
+
+Build mode: debug|release; default: debug
+	'debug`: build debug version, debug mode can be set
+	'release`: build the release version, debug mode setting will not be used
+	
+Debug mode: memory,func; default: all of them
+	'memory`: watch memory allocations
+	'func`: watch all function calls (entry and exit points)
+	""")
+
 baseenv=Environment(CPPPATH=[".","../library","../kaneutil2"])
 env=baseenv.Copy(
 	CCFLAGS="-Wall"
@@ -34,6 +57,9 @@ use=ARGUMENTS.get("use","gettext")
 if "gettext" in use:
 	env.Append(CCFLAGS=" -DUSE_GETTEXT")
 
+prefix=ARGUMENTS.get("prefix","/usr/local")
+env.Append(CCFLAGS=" -DPREFIX="+prefix)
+
 sources = Split("""
 	scc.c
 	""")
@@ -48,4 +74,10 @@ libpaths = Split("""
 	../library
 	""")
 
-Default(env.Program("scc",sources,LIBS=libs,LIBPATH=libpaths))
+scc=env.Program("scc",sources,LIBS=libs,LIBPATH=libpaths)
+Default(scc)
+
+env.Alias("installcc",prefix)
+env.Install(
+	prefix+"/bin/",
+	scc)

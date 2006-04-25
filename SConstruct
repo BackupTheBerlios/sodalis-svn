@@ -51,3 +51,4 @@ if "server" in build:
 
 Alias("install","installserver")
 Alias("install","installlibrary")
+Alias("install","installcc")

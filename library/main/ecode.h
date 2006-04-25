@@ -6,8 +6,8 @@
  *  kane@mail.berlios.de
  ****************************************************************************/
 
-#ifndef __ECODE_H__
-#define __ECODE_H__
+#ifndef SOD__ECODE_H__
+#define SOD__ECODE_H__
 
 /*
 	Коды возврата функций
@@ -23,7 +23,42 @@ enum
 {
 	SE_NONE,
 	SE_MEMORY,
-	SE_KU2
+	SE_KU2,
+	SE_NOT_CONNECTED
 }	secode_t;
+
+#ifdef USE_GETTEXT
+#define sod_throw_error( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=gettext(_et); \
+	session->errorfunc=(char*)__FUNCTION__; \
+	return SOD_ERROR; \
+}
+
+#define sod_throw_value( _ec, _et, _value ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=gettext(_et); \
+	session->errorfunc=(char*)__FUNCTION__; \
+	return _value; \
+}
+#else	// USE_GETTEXT
+#define sod_throw_error( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=_et; \
+	session->errorfunc=(char*)__FUNCTION__; \
+	return SOD_ERROR; \
+}
+
+#define sod_throw_value( _ec, _et, _value ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=_et; \
+	session->errorfunc=(char*)__FUNCTION__; \
+	return _value; \
+}
+#endif	// USE_GETTEXT
 
 #endif

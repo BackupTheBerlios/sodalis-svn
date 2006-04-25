@@ -31,7 +31,7 @@ int main( int argc, char *argv[] )
 	textdomain("sodaliscc");
 	
 	session=sod_init();
-	sod_connect(session,NULL,0,NULL,NULL);
+	sod_exchange_data(session);
 	sod_halt(session);
 	
 	pstop();
