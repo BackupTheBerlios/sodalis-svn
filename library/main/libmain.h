@@ -10,7 +10,14 @@
 #define SOD__LIBMAIN_H__
 #include "errors/open_code.h"
 
+#include <pthread.h>
+
 #include "ecode.h"
+
+/*
+	Версия рабочего протокола
+*/
+#define SOD_PROTOCOL sodalisnpv2
 
 /*
 	Размер IO буффера
@@ -26,7 +33,8 @@ typedef
 enum
 {
 	SOD_NOT_CONNECTED,		// не соеденён
-	SOD_CONNECTED			// соеденён
+	SOD_CONNECTED,			// соеденён
+	SOD_AUTHORIZED			// авторизирован
 }	sod_status_t;
 
 /*
@@ -40,12 +48,14 @@ struct
 	char *errortext;		// текст последней ошибки
 	char *errorfunc;		// функция, где произошла ошибка
 	int socket;				// сокет соединения
+	pthread_t thread;		// поток сессии
 	
 							// сетевые буфферы
 	char inbuf[SOD_BUFFER_SIZE];
 	char outbuf[SOD_BUFFER_SIZE];
 	int inpos, instart;		// текущие (последние) и начальные позиции
 	int outpos, outstart;	// в буфферах
+	int cmdsize;			// допустимый размер команды
 }	sod_session;
 
 /*

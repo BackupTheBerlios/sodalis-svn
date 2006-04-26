@@ -21,6 +21,7 @@ sod_session *session;
 //	scc [parameters] [host] [login] [password]
 int main( int argc, char *argv[] )
 {
+	int i;
 	pstart();
 	
 	/*
@@ -31,7 +32,8 @@ int main( int argc, char *argv[] )
 	textdomain("sodaliscc");
 	
 	session=sod_init();
-	sod_exchange_data(session);
+	sod_connect(session,"localhost",1986,"kane","passw");
+	scanf("%d",&i);
 	sod_halt(session);
 	
 	pstop();

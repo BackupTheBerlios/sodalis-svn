@@ -24,10 +24,38 @@ enum
 	SE_NONE,
 	SE_MEMORY,
 	SE_KU2,
-	SE_NOT_CONNECTED
+	SE_NOT_CONNECTED,
+	SE_SOCKET,
+	SE_GETHOST,
+	SE_CONNECT,
+	SE_SHUTDOWN,
+	SE_CLOSE,
+	SE_THREAD
 }	secode_t;
 
+#define sod_place_error_no_gettext( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=_et; \
+	session->errorfunc=(char*)__FUNCTION__; \
+}
+
+#define sod_throw_error_no_gettext( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=_et; \
+	session->errorfunc=(char*)__FUNCTION__; \
+	return SOD_ERROR; \
+}
+
 #ifdef USE_GETTEXT
+#define sod_place_error( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=gettext(_et); \
+	session->errorfunc=(char*)__FUNCTION__; \
+}
+
 #define sod_throw_error( _ec, _et ) \
 { \
 	session->ecode=_ec; \
@@ -44,6 +72,13 @@ enum
 	return _value; \
 }
 #else	// USE_GETTEXT
+#define sod_place_error( _ec, _et ) \
+{ \
+	session->ecode=_ec; \
+	session->errortext=_et; \
+	session->errorfunc=(char*)__FUNCTION__; \
+}
+
 #define sod_throw_error( _ec, _et ) \
 { \
 	session->ecode=_ec; \

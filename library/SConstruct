@@ -74,6 +74,7 @@ sources = Split("""
 
 libs = Split("""
 	ku2
+	pthread
 	""")
 
 libpaths = Split("""

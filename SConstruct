@@ -44,11 +44,10 @@ if build!="":
 	SConscript("kaneutil2/SConstruct")
 if "library" in build or "client" in build:
 	SConscript("library/SConstruct")
+	Alias("install","installlibrary")
 if "client" in build:
 	SConscript("client-console/SConstruct")
+	Alias("install","installcc")
 if "server" in build:
 	SConscript("server/SConstruct")
-
-Alias("install","installserver")
-Alias("install","installlibrary")
-Alias("install","installcc")
+	Alias("install","installserver")

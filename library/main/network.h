@@ -14,7 +14,19 @@
 #include "libmain.h"
 
 /*
+	Параметры для передачи в поток
+*/
+typedef
+struct
+{
+	sod_session *session;
+	char *login;
+	char *password;
+} sod_thread_arg_t;
+
+/*
 	1.	Открыть соединение и авторизироваться на сервере
+		При этом создаётся отдельный поток, который обрабатывает сообщения
 	2.	session - сессия
 		host - адрес сервера
 		port - порт соединения
@@ -26,7 +38,7 @@
 int sod_connect( sod_session *session, char *host, u_int16_t port, char *login, char *password );
 
 /*
-	1.	Закрыть соединение
+	1.	Закрыть соединение + завершить поток
 	2.	session - сессия
 	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
 	4.	ntni
@@ -34,12 +46,12 @@ int sod_connect( sod_session *session, char *host, u_int16_t port, char *login, 
 int sod_disconnect( sod_session *session );
 
 /*
-	1.	Обменяться данными
-	2.	session - сессия
+	1.	Обменяться данными и вызвать обработчики (потоковая функция)
+	2.	arg - аргументы
 	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
 	4.	ntni
 */
-int sod_exchange_data( sod_session *session );
+int sod_thread( sod_thread_arg_t *arg );
 
 #include "errors/close_code.h"
 #endif
