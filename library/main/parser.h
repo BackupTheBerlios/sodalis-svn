@@ -13,11 +13,16 @@
 #include "libmain.h"
 
 /*
+	Количество параметров в команде
+*/
+#define SOD_ARG_CNT 16
+
+/*
 	1.	Получить текст сообщения из очереди
 	2.	session - сессия
 		datacnt - количество слов в сообщении (см. протокол)
 		data - слова (см. протокол)
-	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
+	3.	В случае ошибки - SOD_ERROR, если сообщение прочитано - SOD_AGAIN, иначе - SOD_OK
 	4.	ntni
 */
 int sod_get_message( sod_session *session, int *datacnt, char **data );

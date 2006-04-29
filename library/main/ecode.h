@@ -12,6 +12,7 @@
 /*
 	Коды возврата функций
 */
+#define SOD_AGAIN 1
 #define SOD_OK 0
 #define SOD_ERROR -1
 
@@ -30,7 +31,9 @@ enum
 	SE_CONNECT,
 	SE_SHUTDOWN,
 	SE_CLOSE,
-	SE_THREAD
+	SE_THREAD,
+	SE_WRITE,
+	SE_READ
 }	secode_t;
 
 #define sod_place_error_no_gettext( _ec, _et ) \

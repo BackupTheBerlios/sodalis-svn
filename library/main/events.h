@@ -18,6 +18,8 @@
 typedef
 enum
 {
+	SOD_EV_ERROR,
+	SOD_EV_DISCON,
 	SOD_EV_MESSAGE
 }	sod_event_t;
 
@@ -26,6 +28,11 @@ enum
 */
 typedef
 void (*sod_callback_f)( sod_event_t event, ... );
+
+/*
+	Обработчик событий по умолчаний
+*/
+void sod_ev_default( sod_event_t event, ... );
 
 /*
 	1.	Привязать обработчик к событию
@@ -54,6 +61,12 @@ int sod_drop_event( sod_session *session, sod_event_t event );
 	4.	ntni
 */
 sod_callback_f *sod_get_event( sod_session *session, sod_event_t event );
+
+/*
+	События:
+*/
+extern sod_callback_f sod_ev_error;
+extern sod_callback_f sod_ev_disconnected;
 
 #include "errors/close_code.h"
 #endif

@@ -20,12 +20,15 @@
 #include "network.h"
 #include "errors/debug.h"
 #include "ecode.h"
+#include "events.h"
+#include "parser.h"
 
 int sod_connect( sod_session *session, char *host, u_int16_t port, char *login, char *password )
 {
+	__label__ _gethost, _pthread;
 	struct sockaddr_in addr;
 	struct hostent *p_he;
-	sod_thread_arg_t sod_thread_arg;
+	static sod_thread_arg_t sod_thread_arg;
 	int iret;
 	pstart();
 	
@@ -102,7 +105,69 @@ int sod_disconnect( sod_session *session )
 
 int sod_thread( sod_thread_arg_t *arg )
 {
+	__label__ _write;
+	int readc, writec, iret;
+	sod_session *const session=arg->session;
+	int datacnt;
+	char *data[SOD_ARG_CNT];
 	pstart();
+	
+	for (;;)
+	{
+		//	запись в сокет
+		if ( session->outpos!=session->outstart )
+		{
+			//	записаны не все данные
+			_write:
+			writec=write(session->socket,session->outbuf+session->outstart,session->outstart-session->outpos);
+			if ( writec==-1 )
+			{
+				sod_place_error_no_gettext(SE_WRITE,strerror(errno));
+				sod_ev_error(SOD_EV_ERROR);
+				if ( session->ecode!=SE_NONE ) break;
+			}	else
+			if ( writec==0 )
+			{
+				//	соединение закрыто
+				sod_disconnect(session);
+				sod_ev_disconnected(SOD_EV_DISCON);
+				break;
+			}
+			session->outstart+=writec;
+			if ( session->outpos!=session->outstart ) goto _write;
+		}
+		
+		//	чтение из сокета
+		readc=read(session->socket,session->inbuf+session->outpos,SOD_BUFFER_SIZE-session->outpos);
+		if ( readc==-1 )
+		{
+			sod_place_error_no_gettext(SE_READ,strerror(errno));
+			sod_ev_error(SOD_EV_ERROR);
+			if ( session->ecode!=SE_NONE ) break;
+		}	else
+		if ( readc==0 )
+		{
+			sod_disconnect(session);
+			sod_ev_disconnected(SOD_EV_DISCON);
+			break;
+		}
+		
+		//	обработка
+		do
+		{
+			iret=sod_get_message(session,&datacnt,data);
+			if ( iret==SOD_ERROR )
+			{
+				sod_ev_error(SOD_EV_ERROR);
+				if ( session->ecode!=SE_NONE ) break;
+			}
+			/*
+				здесь - принятие решений по командам
+			*/
+		}	while ( iret==SOD_AGAIN );
+		
+	}
+	
 	pstop();
 	return SOD_OK;
 }

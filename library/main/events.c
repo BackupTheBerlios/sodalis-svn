@@ -12,6 +12,15 @@
 #include "errors/debug.h"
 #include "ecode.h"
 
+sod_callback_f sod_ev_error=sod_ev_default;
+sod_callback_f sod_ev_disconnected=sod_ev_default;
+
+void sod_ev_default( sod_event_t event, ... )
+{
+	pstart();
+	pstop();
+}
+
 int sod_assign_event( sod_session *session, sod_event_t event, sod_callback_f *callback )
 {
 	pstart();
