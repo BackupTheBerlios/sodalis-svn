@@ -25,7 +25,6 @@ Build mode: debug|release; default: debug
 	
 Debug mode: memory,net,func; default: all of them
 	'memory`: watch memory allocations
-	'net`: log all network messages
 	'func`: watch all function calls (entry and exit points)
 	""")
 
@@ -37,11 +36,9 @@ env=baseenv.Copy(
 mode=ARGUMENTS.get("mode","debug")
 if mode=="debug":
 	env.Append(CCFLAGS=" -g -DDEBUG")
-	debug=ARGUMENTS.get("debug","memory,net,func")
+	debug=ARGUMENTS.get("debug","memory,func")
 	if "memory" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_MEMORY")
-	if "net" in debug:
-		env.Append(CCFLAGS=" -DLOG_NET")
 	if "func" in debug:
 		env.Append(CCFLAGS=" -DDEBUG_FUNC")
 elif mode=="release":

@@ -46,6 +46,14 @@ int sod_connect( sod_session *session, char *host, u_int16_t port, char *login, 
 int sod_disconnect( sod_session *session );
 
 /*
+	1.	Отправить запрос на завершение сеанса
+	2.	session - сессия
+	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
+	4.	ntni
+*/
+int sod_logout( sod_session *session );
+
+/*
 	1.	Обменяться данными и вызвать обработчики (потоковая функция)
 	2.	arg - аргументы
 	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK

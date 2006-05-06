@@ -67,15 +67,3 @@ int sod_halt( sod_session *session )
 	pstop();
 	return SOD_OK;
 }
-
-int sod_iterate( sod_session *session )
-{
-	pstart();
-	
-	/*
-		obmen soob6enijami s setju
-	*/
-	
-	pstop();
-	return SOD_OK;
-}

@@ -17,13 +17,18 @@
 /*
 	Версия рабочего протокола
 */
+#ifndef SOD_PROTOCOL
 #define SOD_PROTOCOL sodalisnpv2
+#endif
 
 /*
 	Размер IO буффера
 */
 #ifndef SOD_BUFFER_SIZE
 #define SOD_BUFFER_SIZE 2048
+#endif
+#ifndef SOD_BUFFER_FREE
+#define SOD_BUFFER_FREE 256
 #endif
 
 /*
@@ -34,6 +39,7 @@ enum
 {
 	SOD_NOT_CONNECTED,		// не соеденён
 	SOD_CONNECTED,			// соеденён
+	SOD_ON_AUTHORIZING,		// в процессе авторизации
 	SOD_AUTHORIZED			// авторизирован
 }	sod_status_t;
 
@@ -56,6 +62,11 @@ struct
 	int inpos, instart;		// текущие (последние) и начальные позиции
 	int outpos, outstart;	// в буфферах
 	int cmdsize;			// допустимый размер команды
+							// блокирующий мьютекс для отправки сообщений
+	pthread_mutex_t msg_mutex;
+	
+							// дополнительный буффер
+	char buffer[SOD_BUFFER_SIZE];
 }	sod_session;
 
 /*
@@ -73,15 +84,6 @@ sod_session *sod_init( void );
 	4.	ntni
 */
 int sod_halt( sod_session *session );
-
-/*
-	1.	Цикл итерации сессии, обмен сообщениями с сервером и
-		вызов обработчиков событий
-	2.	session - сессия
-	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
-	4.	ntni
-*/
-int sod_iterate( sod_session *session );
 
 #include "errors/close_code.h"
 #endif

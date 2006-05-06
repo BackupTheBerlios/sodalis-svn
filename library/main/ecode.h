@@ -33,7 +33,11 @@ enum
 	SE_CLOSE,
 	SE_THREAD,
 	SE_WRITE,
-	SE_READ
+	SE_READ,
+	SE_PARSE,
+	SE_PROTOCOL,
+	SE_EVENT,
+	SE_MUTEX
 }	secode_t;
 
 #define sod_place_error_no_gettext( _ec, _et ) \
@@ -52,6 +56,7 @@ enum
 }
 
 #ifdef USE_GETTEXT
+#include <libintl.h>
 #define sod_place_error( _ec, _et ) \
 { \
 	session->ecode=_ec; \

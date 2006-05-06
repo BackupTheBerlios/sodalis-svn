@@ -20,19 +20,19 @@ enum
 {
 	SOD_EV_ERROR,
 	SOD_EV_DISCON,
-	SOD_EV_MESSAGE
+	SOD_EV_AUTH_OK
 }	sod_event_t;
 
 /*
 	Обработчик событий
 */
 typedef
-void (*sod_callback_f)( sod_event_t event, ... );
+void (*sod_callback_f)( sod_session *session, sod_event_t event, ... );
 
 /*
 	Обработчик событий по умолчаний
 */
-void sod_ev_default( sod_event_t event, ... );
+void sod_ev_default( sod_session *session, sod_event_t event, ... );
 
 /*
 	1.	Привязать обработчик к событию
@@ -40,16 +40,16 @@ void sod_ev_default( sod_event_t event, ... );
 		event - привязываемое событие
 		callback - привязываемый обработчик
 	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
-	4.	ntni
+	4.	SE_EVENT - неверный код события
 */
-int sod_assign_event( sod_session *session, sod_event_t event, sod_callback_f *callback );
+int sod_assign_event( sod_session *session, sod_event_t event, sod_callback_f callback );
 
 /*
 	1.	Освободить событие от обработчика
 	2.	session - сессия
 		event - событие
 	3.	В случае ошибки - SOD_ERROR, иначе - SOD_OK
-	4.	ntni
+	4.	SE_EVENT - неверный код события
 */
 int sod_drop_event( sod_session *session, sod_event_t event );
 
@@ -58,15 +58,16 @@ int sod_drop_event( sod_session *session, sod_event_t event );
 	2.	session - сессия
 		event - событие
 	3.	Обработчик события, или NULL, если произошла ошибка
-	4.	ntni
+	4.	SE_EVENT - неверный код события
 */
-sod_callback_f *sod_get_event( sod_session *session, sod_event_t event );
+sod_callback_f sod_get_event( sod_session *session, sod_event_t event );
 
 /*
 	События:
 */
 extern sod_callback_f sod_ev_error;
 extern sod_callback_f sod_ev_disconnected;
+extern sod_callback_f sod_ev_auth_ok;
 
 #include "errors/close_code.h"
 #endif
