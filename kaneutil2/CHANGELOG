@@ -1,0 +1,6 @@
+2006-05-24  J. Anton <kane@mail.berlios.de>
+Создан файл CHANGELOG.
+Начал написание менеджера ресурсов: resmanager/*.
+
+2006-05-29  J. Anton <kane@mail.berlios.de>
+Менеджер ресурсов закончен (нужна проверка).

@@ -39,6 +39,9 @@ sources = Split("""
 	log/log.c
 	other/other.c
 	dialogue/dialogue.c
+	resmanager/res.c
+	resmanager/tree_name_res.c
+	resmanager/tree_id_res.c
 	""")
 
 Default(env.Library("ku2", sources))

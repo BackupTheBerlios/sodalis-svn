@@ -18,6 +18,11 @@
 #include "other/other.h"
 #include "network.h"
 
+int main()
+{
+}
+
+
 sod_session *sod_init( void )
 {
 	sod_session *session;

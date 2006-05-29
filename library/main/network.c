@@ -107,9 +107,37 @@ int sod_logout( sod_session *session )
 	return SOD_OK;
 }
 
+int sod_write_to_socket( void )
+{
+	__label__ _write;
+	pstart();
+	if ( session->outpos!=session->outstart )
+	{
+		//	записаны не все данные
+		_write:
+		writec=write(session->socket,session->outbuf+session->outstart,session->outpos-session->outstart);
+		if ( writec==-1 )
+		{
+			sod_place_error_no_gettext(SE_WRITE,strerror(errno));
+			sod_ev_error(session,SOD_EV_ERROR);
+			if ( session->ecode!=SE_NONE ) return SOD_ERROR;
+		}	else
+		if ( writec==0 )
+		{
+			//	соединение закрыто
+			sod_disconnect(session);
+			sod_ev_disconnected(session,SOD_EV_DISCON);
+			return SOD_AGAIN;
+		}
+		session->outstart+=writec;
+		if ( session->outpos!=session->outstart ) goto _write;
+	}
+	pstop();
+}
+
 int sod_thread( sod_thread_arg_t *arg )
 {
-	__label__ _write, _exit;
+	__label__ _exit;
 	int readc, writec, iret;
 	sod_session *const session=arg->session;
 	int datacnt;
@@ -128,28 +156,7 @@ int sod_thread( sod_thread_arg_t *arg )
 	{
 		_
 		//	запись в сокет
-		if ( session->outpos!=session->outstart )
-		{
-			_
-			//	записаны не все данные
-			_write:
-			writec=write(session->socket,session->outbuf+session->outstart,session->outpos-session->outstart);
-			if ( writec==-1 )
-			{
-				sod_place_error_no_gettext(SE_WRITE,strerror(errno));
-				sod_ev_error(session,SOD_EV_ERROR);
-				if ( session->ecode!=SE_NONE ) break;
-			}	else
-			if ( writec==0 )
-			{
-				//	соединение закрыто
-				sod_disconnect(session);
-				sod_ev_disconnected(session,SOD_EV_DISCON);
-				break;
-			}
-			session->outstart+=writec;
-			if ( session->outpos!=session->outstart ) goto _write;
-		}
+		
 		
 		//	прверка свободного места в буффере
 		if ( session->inpos>SOD_BUFFER_SIZE-SOD_BUFFER_FREE )

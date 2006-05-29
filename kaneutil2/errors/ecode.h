@@ -28,7 +28,8 @@ enum
 	KE_NOTFOUND,
 	KE_DOUBLE,
 	KE_IO,
-	KE_SYNTAX
+	KE_SYNTAX,
+	KE_EXTERNAL
 }	kucode_t;
 
 extern kucode_t kucode;
